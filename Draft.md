@@ -194,7 +194,7 @@ LINQ is actually more than these language elements, there is actual language lev
 ## LINQ vs Rx
 
 | LINQ (to Objects) | Rx |
-| -: | :- |
+| ---: | :--- |
 | Can work with collections and it works on enumerable types, which means that it builds on the enumerator design pattern which is represented by the `IEnumerable<T>` and the `IEnumerator<T>` interfaces | Works with observable types, which means it builds on the observer design pattern which is represented by the `IObservable<T>` and `IObserver<T>` interfaces |
 | Represents a *polling* technique, as internally we keep polling the `MoveNext()` method on the `IEnumerator` for new elements in the collection. We ask the system for the next element | Represents a *push* technique, as internally the `IObservable` object keeps a reference to the subscribed `IObserver` and calls it's `OnNext()` callback method when some event occurs. The system notifies us if there is a new element available
 | Takes a collection and allows you to transform, filter, order, group and do many more operations on it and returns the modified collection | Takes a source event stream and transforms, filters, orders, groups and does many more operations on it, and returns the modified event stream |
