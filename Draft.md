@@ -210,12 +210,12 @@ You will build a search application that works with a simulated web service. Thi
 
 Let's build the frame of the application so you can focus on the important part of the code later in the chapter.
 
-1. Open Visual Studio (2015)
-2. Create a new project (`File / New / Project`)
-3. In the dialog window select `Windows / Universal` on the left hand pane
-4. Then the `Blank App (Universal Windows)` project template on the right.
-5. Add the Rx NuGet package to the project by typing `PM> Install-Package System.Reactive` to the Package Manager console
-6. Get a list of words and save them in a static class named `SampleData`, returned by a method named `GetTop100EnglishWords()`. For reference here is the sample data I used in my application:
+* Open Visual Studio (2015)
+* Create a new project (`File / New / Project`)
+* In the dialog window select `Windows / Universal` on the left hand pane
+* Then the `Blank App (Universal Windows)` project template on the right.
+* Add the Rx NuGet package to the project by typing `PM> Install-Package System.Reactive` to the Package Manager console
+* Get a list of words and save them in a static class named `SampleData`, returned by a method named `GetTop100EnglishWords()`. For reference here is the sample data I used in my application:
 ```csharp
 // Code Sample 2-1
 // Sample data
@@ -240,7 +240,7 @@ public static class SampleData
     }
 }
 ```
-7. Build the fake web service that will work with this sample data and simulate latency and failure. As a first step create the latency and failure simulation method
+* Build the fake web service that will work with this sample data and simulate latency and failure. As a first step create the latency and failure simulation method
 ```csharp
 // Code Sample 2-2
 // Latency and failure simulation
@@ -256,7 +256,7 @@ private async Task SimulateTimeoutAndFail()
         throw new Exception("Error!");
 }
 ```
-8. The next method should be the one that returns the result for a search, as it won't do anything but generate a `string` saying *"This was your query: <YOUR_QUERY>"*
+* The next method should be the one that returns the result for a search, as it won't do anything but generate a `string` saying *"This was your query: <YOUR_QUERY>"*
 ```csharp
 // Code Sample 2-3
 // Query results
@@ -268,7 +268,7 @@ public async Task<IEnumerable<string>> GetResultsForQuery(string query)
     return new string[] { $"This was your query: {query}" };
 }
 ```
-9. Last but not least, the most important part of the service is the one that will generate the suggestions. It will take the query, split it into individual words, try to suggest possible endings for the last word using the sample data, and generate the full suggestions by taking the "head" of the query (all the words before the last one) and the possible suggestions for the last one and concatenate them into strings.
+* Last but not least, the most important part of the service is the one that will generate the suggestions. It will take the query, split it into individual words, try to suggest possible endings for the last word using the sample data, and generate the full suggestions by taking the "head" of the query (all the words before the last one) and the possible suggestions for the last one and concatenate them into strings.
 ```csharp
 // Code Sample 2-4
 // Query suggestions
@@ -292,7 +292,7 @@ public async Task<IEnumerable<string>> GetSuggestionsForQuery(string query)
     return suggestionsForLastWordOfQuery.Select(s => $"{headOfQuery} {s}").Take(10);
 }
 ```
-10. Now the only missing piece is the UI. It will be very simple, a `TextBox` to type the query into, a `Button` to initiate the search, a `TextBlock` for "debug" information and a `ListView` to display the suggestions
+* Now the only missing piece is the UI. It will be very simple, a `TextBox` to type the query into, a `Button` to initiate the search, a `TextBlock` for "debug" information and a `ListView` to display the suggestions
 ```XML
 // Code Sample 2-5
 // The XAML UI
