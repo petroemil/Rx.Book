@@ -203,3 +203,139 @@ LINQ is actually more than these language elements, there is actual language lev
 # Hello Rx
 
 ## Preparations
+
+In this chapter you will see a more realistic but still relatively simple example, that will demonstrate how much Rx simplifies your life even after the `async`/`await` keywords.
+
+You will build a search application that works with a simulated web service. This service will provide suggestions and results from a hard coded list of words and more importantly it will simulate varying latency and failures.
+
+Let's build the frame of the application so you can focus on the important part of the code later in the chapter.
+
+1. Open Visual Studio (2015)
+2. Create a new project (`File / New / Project`)
+3. In the dialog window select `Windows / Universal` on the left hand pane
+4. Then the `Blank App (Universal Windows)` project template on the right.
+5. Add the Rx NuGet package to the project by typing `PM> Install-Package System.Reactive` to the Package Manager console
+6. Get a list of words and save them in a static class named `SampleData`, returned by a method named `GetTop100EnglishWords()`. For reference here is the sample data I used in my application:
+```csharp
+// Code Sample 2-1
+// Sample data
+
+public static class SampleData
+{
+    public static List<string> GetTop100EnglishWords()
+    {
+        return new List<string>
+        {
+            "the", "be", "to", "of", "and", "a", "in", "that", "have", "I",
+            "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+            "this", "but", "his", "by", "from", "they", "we", "say", "her", "she",
+            "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
+            "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+            "when", "make", "can", "like", "time", "no", "just", "him", "know", "take",
+            "people", "into", "year", "your", "good", "some", "could", "them", "see", "other",
+            "than", "then", "now", "look", "only", "come", "its", "over", "think", "also",
+            "back", "after", "use", "two", "how", "our", "work", "first", "well", "way",
+            "even", "new", "want", "because", "any", "these", "give", "day", "most", "us"
+        };
+    }
+}
+```
+7. Build the fake web service that will work with this sample data and simulate latency and failure. As a first step create the latency and failure simulation method
+```csharp
+// Code Sample 2-2
+// Latency and failure simulation
+
+private async Task SimulateTimeoutAndFail()
+{
+    // Simulating long time execution         
+    var random = new Random();
+    await Task.Delay(random.Next(300));
+
+    // Simulating failure         
+    if (random.Next(100) < 10)
+        throw new Exception("Error!");
+}
+```
+8. The next method should be the one that returns the result for a search, as it won't do anything but generate a `string` saying *"This was your query: <YOUR_QUERY>"*
+```csharp
+// Code Sample 2-3
+// Query results
+
+public async Task<IEnumerable<string>> GetResultsForQuery(string query)
+{
+    await this.SimulateTimeoutAndFail();
+
+    return new string[] { $"This was your query: {query}" };
+}
+```
+9. Last but not least, the most important part of the service is the one that will generate the suggestions. It will take the query, split it into individual words, try to suggest possible endings for the last word using the sample data, and generate the full suggestions by taking the "head" of the query (all the words before the last one) and the possible suggestions for the last one and concatenate them into strings.
+```csharp
+// Code Sample 2-4
+// Query suggestions
+
+public async Task<IEnumerable<string>> GetSuggestionsForQuery(string query)
+{
+    await this.SimulateTimeoutAndFail();
+
+    var words = SampleData.GetTop100EnglishWords().Select(x => x.ToLower());
+
+    var wordsOfQuery = query.ToLower().Split(' ');
+    var lastWordOfQuery = wordsOfQuery.Last();
+    var suggestionsForLastWordOfQuery = words.Where(w => w.StartsWith(lastWordOfQuery));
+
+    var headOfQuery = "";
+    if (wordsOfQuery.Length > 1)
+    {
+        headOfQuery = String.Join(" ", wordsOfQuery.SkipLast(1));
+    }
+            
+    return suggestionsForLastWordOfQuery.Select(s => $"{headOfQuery} {s}").Take(10);
+}
+```
+10. Now the only missing piece is the UI. It will be very simple, a `TextBox` to type the query into, a `Button` to initiate the search, a `TextBlock` for "debug" information and a `ListView` to display the suggestions
+```XML
+// Code Sample 2-5
+// The XAML UI
+
+<Grid Margin="100">
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="SearchBox" />
+        <Button x:Name="SearchButton" Grid.Column="1" Content="Search" />
+    </Grid>
+
+    <TextBlock x:Name="ErrorLabel" Grid.Row="1" Text="Status" />
+
+    <ListView x:Name="Suggestions" Grid.Row="2" SelectionMode="None" IsItemClickEnabled="True" />
+</Grid>
+```
+
+## Traditional approach
+
+### Timeout
+
+### Retry
+
+### Throttle
+
+### Distinct
+
+### Race condition
+
+## Rx approach
+
+### Search suggestions
+
+### Search results
+
+## Summary

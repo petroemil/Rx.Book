@@ -33,7 +33,7 @@ namespace SearchExample
 
             var wordsOfQuery = query.ToLower().Split(' ');
             var lastWordOfQuery = wordsOfQuery.Last();
-            var suggestionsForLastWord = words.Where(w => w.StartsWith(lastWordOfQuery));
+            var suggestionsForLastWordOfQuery = words.Where(w => w.StartsWith(lastWordOfQuery));
 
             var headOfQuery = "";
             if (wordsOfQuery.Length > 1)
@@ -41,7 +41,7 @@ namespace SearchExample
                 headOfQuery = String.Join(" ", wordsOfQuery.SkipLast(1));
             }
             
-            return suggestionsForLastWord.Select(s => $"{headOfQuery} {s}").Take(10);
+            return suggestionsForLastWordOfQuery.Select(s => $"{headOfQuery} {s}").Take(10);
         }
     }
 }
