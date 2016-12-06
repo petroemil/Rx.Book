@@ -95,7 +95,7 @@ Even though it doesn't belong to this specific example, but if you would combine
 var person = new { Name = "Emil", Age = 27 };
 ```
 
-Here the compiler can look at the right side of the equals sign, it won't be able to guess the type of the variable… so it generates one behind the scene.
+Here the compiler can look at the right side of the equals sign, it won't be able to guess the type of the variable... so it generates one behind the scene.
 
 Let's get back to the original example, and take the refactoring of the code one step further.
 
@@ -111,7 +111,7 @@ return numbers
 
 If you remember, the numbers variable is a collection of integers. How can you call a method called `Where()` on it, when the `List<T>` type doesn't have such method? The answer for this question are extension methods. In the good old days when you wanted to add new functionality to a type, you inherited a new class from the original type and defined the new method on it. This approach has two main problems though. On one side it's possible that the type you want to extend is sealed, the other problem is that even if you can define your own "super type", you will have to use that throughout your application and convert back and forth between that and the original type on the edges of your library.
 
-You don't have to think something too complicated. Just think about a function that extends the `string` with some special kind of formatting. If you want to use this logic in multiple places, you either have to move it to a static helper class or define your `SuperString` class. The latter in this specific example is not actually possible because the string type is sealed. So you are left with the static class. But think about how it would look of you would have to use more of these operations after each other…
+You don't have to think something too complicated. Just think about a function that extends the `string` with some special kind of formatting. If you want to use this logic in multiple places, you either have to move it to a static helper class or define your `SuperString` class. The latter in this specific example is not actually possible because the string type is sealed. So you are left with the static class. But think about how it would look of you would have to use more of these operations after each other...
 
 To solve these kind of problems, Microsoft introduced the extension methods in C#, which makes it possible to extend any class (or even interface) using the following syntax:
 
