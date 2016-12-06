@@ -256,7 +256,7 @@ private async Task SimulateTimeoutAndFail()
         throw new Exception("Error!");
 }
 ```
-* The next method should be the one that returns the result for a search, as it won't do anything but generate a `string` saying *"This was your query: <YOUR_QUERY>"*
+* The next method should be the one that returns the result for a search, as it won't do anything but generate a `string` saying *"This was your query: YOUR_QUERY"*
 ```csharp
 // Code Sample 2-3
 // Query results
