@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -46,30 +47,26 @@ namespace TimelineGenerator
             this.timelineDrawer.AddCompletitionEventToTimeLine(0, 1000, false);
         }
 
-        //public async Task Never()
-        //{
-        //    this.timelineDrawer.DrawTimeLine(1);
-        //}
+        public async Task Never()
+        {
+            this.timelineDrawer.DrawTimeLine(1);
+        }
 
         public async Task Empty()
         {
-            this.timelineDrawer.DrawTimeLine(0, 1000, 1000);
-            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 1000, false);
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 0, false);
         }
 
         public async Task Return()
         {
-            this.timelineDrawer.ClearCanvas();
-
-            this.timelineDrawer.DrawTimeLine(0, 900, 1000);
-            this.timelineDrawer.AddEventToTimeLine(0, 900, "A");
-            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 1000, false);
+            this.timelineDrawer.DrawTimeLine(0, 0, 100);
+            this.timelineDrawer.AddEventToTimeLine(0, 0, "A");
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 100, false);
         }
 
         public async Task Throw()
         {
-            this.timelineDrawer.DrawTimeLine(0, 1000, 1000);
-            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 1000, true);
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 0, true);
         }
 
         public async Task Range()
@@ -157,9 +154,9 @@ namespace TimelineGenerator
 
         public async Task FromAsync()
         {
-            this.timelineDrawer.DrawTimeLine(0, 800, 1000);
-            this.timelineDrawer.AddEventToTimeLine(0, 900, "A");
-            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 1000, false);
+            this.timelineDrawer.DrawTimeLine(0, 0, 200);
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "A");
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 200, false);
         }
 
         public async Task Amb()
