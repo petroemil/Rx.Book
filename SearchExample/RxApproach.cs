@@ -41,7 +41,7 @@ namespace SearchExample
 
             // Subscribe to the prepared event stream
             queryTextChanged
-                .HandleServiceCall(this.searchService.GetSuggestionsForQuery)
+                .CallService(this.searchService.GetSuggestionsForQuery)
                 .ObserveOnDispatcher()
                 .Do(this.OnNext, this.OnError)
                 .Retry()
@@ -70,15 +70,12 @@ namespace SearchExample
 
             // Subscribe to the prepared event stream
             mergedInput
-                .HandleServiceCall(this.searchService.GetResultsForQuery)
+                .CallService(this.searchService.GetResultsForQuery)
                 .ObserveOnDispatcher()
                 .Do(this.OnNext, this.OnError)
                 .Retry()
                 .Subscribe();
         }
-
-        // Fun fact - the input could be ANYTHING as it's just an IObservable<string> and not a specific control's specific event
-        // It would be very easy to further decouple the source from the main Rx expression and test it in a Unit Test with a mocked source
 
         private void OnNext(IEnumerable<string> values)
         {

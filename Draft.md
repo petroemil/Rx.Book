@@ -666,8 +666,126 @@ private void ErrorCallBack(Exception exception)
 
 ## Rx approach
 
-### Search suggestions
+When you think about Rx, you have to think about it as a stream or pipeline. You put a message into the pipeline and it will go through various steps of transformation, filtering, groupping, aggregating, delaying, throttling, etc.
 
-### Search results
+After you defined your logic as a series of steps, you can subscribe to this stream of events and act on anything coming out of it.
+
+I don't want to waste your time too much, because the concepts and a lot of the operators are going to be explained in depth in the next chapter, so let me just show you the final implementation of the "Rx-style" ServiceCallWrapper class.
+
+```csharp
+// Sample Code 2-17
+// Rx-style implementation of the ServiceCallWrapper class
+
+public static class ServiceCallWrapper
+{
+    private static readonly TimeSpan throttleInterval = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan timeoutInterval = TimeSpan.FromMilliseconds(250);
+    private static readonly int numberOfRetries = 3;
+
+    public static IObservable<TOut> WrapServiceCall<TIn, TOut>(IObservable<TIn> source, Func<TIn, Task<TOut>> serviceCall)
+    {
+        return source
+            .Throttle(throttleInterval)
+            .DistinctUntilChanged()
+            .Select(param => Observable
+                .FromAsync(() => serviceCall(param))
+                .Timeout(timeoutInterval)
+                .Retry(numberOfRetries))
+            .Switch();
+    }
+}
+```
+
+As you can see the code is significantly simpler and more readable than the "traditional approach".
+
+There are two main differences that I would like to point out. You won't call this method directly each time you have a new value, you just provide "some source" that will provide the input strings for the service call.
+The other one is that as an output you didn't have to define events, it will be just an other `IObservable` stream, that the consumer logic can subscribe to.
+
+If you remember what I wrote about LINQ, you might notice a similarity of the method signature: recieving some `IObservable<TIn>` as a parameter and returning an `IObservable<TOut>`. This is a perfect candidate to be turned into an extension method - and by the way a great example to show how to build custom operators for Rx.
+
+```csharp
+// Code Sample 2-18
+// Extension method to use the Rx-style WrappedServiceCall class
+
+public static IObservable<TOut> CallService<TIn, TOut>(this IObservable<TIn> source, Func<TIn, Task<TOut>> serviceCall)
+{
+    return ServiceCallWrapper.WrapServiceCall(source, serviceCall);
+}
+```
+
+The remaining bit is to show the code to use this implementation.
+
+```csharp
+// Code Sample 2-19
+// Using the Rx-style ServiceCallWrapper class to get suggestions for queries
+// Triggered by every new character entered into the SearchBox
+
+// Define source event (observable)
+var queryTextChanged = Observable
+    .FromEventPattern(this.searchBox, nameof(this.searchBox.TextChanged))
+    .Select(e => this.searchBox.Text);
+
+// Subscribe to the prepared event stream
+queryTextChanged
+    .CallService(this.searchService.GetSuggestionsForQuery)
+    .ObserveOnDispatcher()
+    .Do(this.OnNext, this.OnError)
+    .Retry()
+    .Subscribe();
+```
+
+```csharp
+// Code Sample 2-20
+// Using the ServiceCallWrapper class to get results for queries
+// Triggered by clicking on the Search Button, clicking on a suggestion or hitting the Enter key
+
+// Define source events (observables)
+var searchButtonClicked = Observable
+    .FromEventPattern(this.searchButton, nameof(this.searchButton.Click))
+    .Select(_ => this.searchBox.Text);
+
+var suggestionSelected = Observable
+    .FromEventPattern<ItemClickEventArgs>(this.suggestions, nameof(this.suggestions.ItemClick))
+    .Select(e => e.EventArgs.ClickedItem as string);
+
+var enterKeyPressed = Observable
+    .FromEventPattern<KeyRoutedEventArgs>(this.searchBox, nameof(this.searchBox.KeyDown))
+    .Where(e => e.EventArgs.Key == VirtualKey.Enter)
+    .Select(_ => this.searchBox.Text);
+            
+// Merge the source events into a single stream
+var mergedInput = Observable
+    .Merge(searchButtonClicked, enterKeyPressed, suggestionSelected);
+
+// Subscribe to the prepared event stream
+mergedInput
+    .CallService(this.searchService.GetResultsForQuery)
+    .ObserveOnDispatcher()
+    .Do(this.OnNext, this.OnError)
+    .Retry()
+    .Subscribe();
+```
+
+What you can see here is a bunch of example to transform a traditional .NET `event` into an `IObservable` stream. To do this you can use the `Observable.FromEventPattern` static method. EventPattern in this context refers to the typical `(object sender, EventArgs args)` signature, so that's what this method expects. You just pass the event source object and the name of the event, and optionally the more specific types for the `EventArgs` or the sender object.
+
+Once you converted the event into an observable stream, you can start doing various operations on it, like extracting the useful information, transforming this weird `EventPattern<T>` object into something more meaningful, in this case the `string` that you want to send to the service calls. 
+
+You can also do some filtering as you can see with the `enterKeyPressed` example. You subscribe to the event, do the filtering based on the pressed key and extract the useful information. It means it will produce a new event containing the content of the `SearchBox` every time the user hits the Enter key.
+
+You should notice the creation of the `mergedInput` observable. You defined 3 separate observables, but you actually want to do the exact same thing with them, so it would be better to have all of those merged in just one stream. That's what you can use the `Mergre()` operator for.
+
+Once you have your source in place, you can finally use your prepared extension method for the `ServiceCallWrapper` class and just naturally use it as part of the pipeline definition, just like any other operator.
+
+The rest of the pipeline goes like this: <br/>
+The `ObserveOnDispatcher()` operator is used to marshall the flow of the observable stream back to the UI thread. <br/>
+The `Do()` operator lets you to inspect the stream at specific positions - this is where the actual CallBack methods are called. <br/>
+The `Retry()` operator is necessarry to make sure the stream never gets terminated by some unhandled exception. <br/>
+And lastly the `Subscribe()` method is the method that actually activates this whole logic. Until you don't call subscribe, the stream is just a definition of steps, but it won't do anything.
 
 ## Summary
+
+In this chapter you saw a good step-by-step example to compare the pain of dealing with asynchronous programming in a traditional way, and the ease of doing the same thing using Rx.
+
+In the next chapter you will learn about the depth of Rx, the concepts behind it, a number of commonly used operators and more.
+
+# Rx = Observables + LINQ + Schedulers

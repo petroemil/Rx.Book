@@ -24,9 +24,9 @@ namespace SearchExample.RxService
         }
     }
 
-    public static class SubjectExtensions
+    public static class ServiceCallWrapperExtensions
     {
-        public static IObservable<TOut> HandleServiceCall<TIn, TOut>(this IObservable<TIn> source, Func<TIn, Task<TOut>> serviceCall)
+        public static IObservable<TOut> CallService<TIn, TOut>(this IObservable<TIn> source, Func<TIn, Task<TOut>> serviceCall)
         {
             return ServiceCallWrapper.WrapServiceCall(source, serviceCall);
         }
