@@ -1,3 +1,23 @@
+# Table of contents
+
++ [Introduction](#introduction)
+  + [The problem - asynchrony](#the-problem---asynchrony)
+  + [What is an Observable?](#what-is-an-observable)
+  + [What is LINQ?](#what-is-linq)
+  + [LINQ vs Rx](#linq-vs-rx)
++ [Hello Rx](#hello-rx)
+  + [Preparations](#preparations)
+  + [Traditional approach](#traditional-approach)
+    + [Timeout](#timeout)
+    + [Retry](#retry)
+    + [Throttle](#throttle)
+    + [Distinct](#distinct)
+    + [Race condition](#race-condition)
+    + [All together](#all-together)
+  + [Rx approach](#rx-approach)
+  + [Summary](#Summary)
++ [Rx = Observables + LINQ + Schedulers](#rx---observables---linq---schedulers)
+
 # Introduction
 
 ## The problem - asynchrony
