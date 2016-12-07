@@ -50,15 +50,13 @@ namespace SearchExample.TraditionalService
                 var newCall = Task.Run(async () =>
                 {
                     // Retry logic
-                    var errorHappened = false;
-                    var tries = 0;
-                    do
+                    for (var tries = 0; tries < this.numberOfRetries; tries++)
                     {
-                        errorHappened = false;
                         try
                         {
                             // Timeout logic
                             var newTask = this.wrappedServiceCall(query);
+
                             var timeoutTask = Task.Delay(this.timeoutInterval);
 
                             var firstTaskToEnd = await Task.WhenAny(newTask, timeoutTask);
@@ -66,12 +64,8 @@ namespace SearchExample.TraditionalService
                             if (newTask == firstTaskToEnd) return newTask.Result;
                             else throw new Exception("Timeout");
                         }
-                        catch
-                        {
-                            tries++;
-                            errorHappened = true;
-                        }
-                    } while (errorHappened == true && tries < this.numberOfRetries);
+                        catch { /* deal with the exception */ }
+                    }
 
                     throw new Exception("Out of retries");
                 });

@@ -11,21 +11,11 @@ namespace SearchExample.TraditionalService
         private readonly int numberOfRetries = 3;
         public async Task<IEnumerable<string>> ServiceCall_Retry(string query)
         {
-            var errorHappened = false;
-            var tries = 0;
-            do
+            for (var tries = 0; tries < this.numberOfRetries; tries++)
             {
-                errorHappened = false;
-                try
-                {
-                    return await this.searchService.GetSuggestionsForQuery(query);
-                }
-                catch
-                {
-                    tries++;
-                    errorHappened = true;
-                }
-            } while (errorHappened == true && tries < this.numberOfRetries);
+                try { return await this.searchService.GetSuggestionsForQuery(query); }
+                catch { /* deal with the exception */ }
+            }
 
             throw new Exception("Out of retries");
         }

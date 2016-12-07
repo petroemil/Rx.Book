@@ -322,15 +322,347 @@ public async Task<IEnumerable<string>> GetSuggestionsForQuery(string query)
 
 ## Traditional approach
 
+Now that you have the foundation of the app, let's take a look at the high level description of the problem you are facing.
+
+The goal is to build a search page where as the users are typing their query, they get suggestions for possible completions, and when they finally hit the Search button, show them some search results.
+
+An interesting side fact: when you are using a real search engine (like Bing), the suggestions you are getting are just a result of some smart matching of words, but doesn't necessarily represent an actual result. It's very much possible that the search engine will help you phrase the perfect query by giving you some amazing suggestions, and then it won't find anything related to what you wanted. So long story short, suggestions and results are different things, but suggestions in real life are built based on statistical data from other users' queries and indexed websites and some intelligence to just suggest matching words to your existing query, so they can still be absolutely useful.
+
+let's start building the app logic with a naive implementation and find the potential problems in it.
+
+Put the following Code Sample in the constructor of the main page and try it in action.
+
+```csharp
+// Code Sample 2-6
+// Overly simplified, naive approach for the search page
+
+this.searchBox.TextChanged += async (s, e) => 
+{
+    var query = this.searchBox.Text;
+    var suggestions = await this.searchService.GetSuggestionsForQuery(query);
+    this.suggestions.ItemsSource = suggestions;
+};
+
+this.searchButton.Click += async (s, e) => 
+{
+    var query = this.searchBox.Text;
+    var results = await this.searchService.GetResultsForQuery(query);
+    this.suggestions.ItemsSource = results;
+};
+```
+
+What will happen if you run the app?
+
+Probably one of the first things you will notice after playing with it a little bit is that thanks to the simulated random latency of queries you will receive suggestions out of order. You might try to type something like "where", but the logic sends a request for new suggestions after every single new character in the query, and it's very much possible that you receive suggestions for the fragment "wh" by the time you already typed "whe", in worse case even overriding the suggestions for "whe" because of the latency difference makes it possible that the response from the web service call returns the suggestions for "whe" sooner than the suggestions for "wh".
+
+An other problem that you might notice is not necessarily a logical problem, but more like a bad user experience. Requesting suggestions for every single new character the user types is a waste of resources (CPU, battery, network - not to mention money, if the user is using a metered connection, like 4G).
+
+Seeing these problems, let's try to collect the requirements for this app to work better.
+
+The application should be resilient to server side errors and timeouts. It should automatically retry (let's say 3 times) every request if they fail for any reason.
+
+It would be nice to have some throttling mechanism, so the app wouldn't issue a request for suggestions for every new character, but it would wait until the user calms down and is not typing.
+
+A seemingly small but useful optimisation to check if two consecutive queries are the same, in which case the app shouldn't do anything. This can happen because of the throttling, if the user types something, waits, types something new but immediately deletes it returning to the previous state of the query, the app would basically see 2 events with the same request. Also if the user just types something in the search box and then starts spamming the search button, the app shouldn't send the exact same query multiple times.
+
+Last but not least there is a race condition problem, meaning the app have to make sure that the user only gets suggestions or results for what they typed last, and no phantom responses with high latency should show up unexpectedly.
+
+Let's take a look at the individual problems then to a solution to combine them.
+
 ### Timeout
+
+Thanks to the `await` keyword introduced in C# 5.0, you can write short and easy to read asynchronous code. The *raw* service call is just one line of code...
+
+```csharp
+// Code Sample 2-7
+// Using the await keyword to make an asynchronous call
+
+var suggestions = await this.searchService.GetSuggestionsForQuery(query);
+```
+
+... but as soon as you want something a little bit more difficult, you have to leave the comfort of this simplicity and start writing code. A possible implementation for the timeout logic can be seen below.
+
+```csharp
+// Code Sample 2-8
+// Implementation of timeout
+
+private readonly TimeSpan timeoutInterval = TimeSpan.FromMilliseconds(500);
+public async Task<IEnumerable<string>> ServiceCall_Timeout(string query)
+{
+    var newTask = this.searchService.GetSuggestionsForQuery(query);
+    var timeoutTask = Task.Delay(this.timeoutInterval);
+
+    var firstTaskToEnd = await Task.WhenAny(newTask, timeoutTask);
+
+    if (newTask == firstTaskToEnd) return newTask.Result;
+    else throw new Exception("Timeout");
+}
+```
+
+You start the service call and a delay in parallel and wait for one of them to return. Based on which one returned first you can decide if the operation finished successfully (or failed for some other reason), or timed out.
 
 ### Retry
 
+Retry logic usually involves some kind of loop, trying an operation over and over again n times. Again, the `await` keyword saves quite a lot of code as you can use await withing a `for` or `while` loop, but you have to write some code to make it happen. Here is a possible implementation.
+
+```csharp
+// Code Sample 2-9
+// Implementation of retry
+
+private readonly int numberOfRetries = 3;
+public async Task<IEnumerable<string>> ServiceCall_Retry(string query)
+{
+    for (var tries = 0; tries < this.numberOfRetries; tries++)
+    {
+        try { return await this.searchService.GetSuggestionsForQuery(query); }
+        catch { /* deal with the exception */ }
+    }
+
+    throw new Exception("Out of retries");
+}
+```
+
+The code basically includes a `for` loop that loops 3 times and if it "succesfully" manages to do that, at the end of the method an exception waits to be thrown. So loop - loop - loop - throw.
+
+Inside the `for` loop is the actual service call in a `try`-`catch` block. <br/>
+If the service call returns successfully, the method returns and there won't be any more looping or exception throwing at the end. <br/>
+But if the service call fails, the `try`-`catch` block "swallows" it and lets the `for` loop to go to the next iteration and retry it, or exit the `for` loop and throw the exception at the end of the method.
+
 ### Throttle
+
+Throttling, distinct check and race condition handling are more complicated tasks to implement. By their nature they will filter out some of the requests, not returning anything for them. There won't be a 1:1 connection between the requests and responses, there will be more requests than responses.
+
+Throttling will let you request suggestions as frequently as you want, but internally it will only issue a request (and produce any kind respnse) after the user haven't touched the keyboard for half second.
+
+Yet again, for the distinction check, you can requests suggestions as many times as you want, but internally it will only send the request through if it's different than the previous request.
+
+And the race condition check will throw away some of the old service calls in case there is a newer one requested.
+
+This leads to a pattern where the service call wrapping method will no longer directly return anything, it will turn into a `void` method, and instead you will be able to get the most recent results through a CallBack event.
+
+Throttling works in a simple way: You save the current `DateTime` into an instance level field, wait some time (half second) and check if the time difference between the saved and the new current `DateTime` is equals or more than the specified throttling interval. If it is, it means that no one called this method until it was waiting (otherwise the difference between the saved and current `DateTime` would be less than the specified throttle interval), so it can advance forward and do the service call, and send the result of the call through the CallBack event.
+
+The following Code Sample shows the implementation.
+
+```csharp
+// Code Sample 2-10
+// Implementation of throttle
+
+private readonly TimeSpan throttleInterval = TimeSpan.FromMilliseconds(500);
+private DateTime lastThrottledParameterDate;
+public event Action<IEnumerable<string>> CallBack_Throttle;
+public async void ServiceCall_Throttle(string query)
+{
+    this.lastThrottledParameterDate = DateTime.Now;
+    await Task.Delay(this.throttleInterval);
+
+    if (DateTime.Now - this.lastThrottledParameterDate < this.throttleInterval) return;
+
+    var suggestions = await this.searchService.GetSuggestionsForQuery(query);
+    this.CallBack_Throttle?.Invoke(suggestions);
+}
+```
 
 ### Distinct
 
+As described before, distinction check has a very simple logic: only do the service call if the query is different from the previous one.
+
+```csharp
+// Code Sample 2-11
+// Implementation of distinction check
+
+private string lastDistinctParameter;
+public event Action<IEnumerable<string>> CallBack_Distinct;
+public async void ServiceCall_Distinct(string query)
+{
+    if (this.lastDistinctParameter != query)
+        this.lastDistinctParameter = query;
+    else
+        return;
+
+    var suggestions = await this.searchService.GetSuggestionsForQuery(query);
+
+    this.CallBack_Distinct?.Invoke(suggestions);
+}
+```
+
 ### Race condition
+
+Dealing with race condition will happen with a typical optimistic concurrency approach. Tag the service call with a unique identifier save it in a shared variable, wait for it to return and check if it this time the saved identifier is still the same as the identifier of the just returned service call. <br/>
+If they are the same, it means that no other service calls were issued during the time the original service call was being processed, and it's still the latest, most recent result. <br/>
+If they don't match though, it means that an other service call has been made while waiting for the first one, invalidating the first service call's result as it's no longer the most recent one.
+
+In this specific example you won't have to actually explicitly tag the service calls with some kind of `Guid`, you can just use the `Task` object's reference that represents the service call.
+
+```csharp
+// Code Sample 2-12
+// Implementation of race condition handling
+
+private Task<IEnumerable<string>> lastCall;
+public event Action<IEnumerable<string>> CallBack_RaceCondition;
+public async void ServiceCall_RaceCondition(string query)
+{
+    var newCall = this.searchService.GetSuggestionsForQuery(query);
+    this.lastCall = newCall;
+
+    var result = await newCall;
+
+    if (this.lastCall == newCall)
+        this.CallBack_RaceCondition?.Invoke(result);
+}
+```
+
+### All together
+
+Now, that you have an idea about the individual pieces, let's try to put them together and see how the resulting implementation can actually be used.
+
+```
+// Code Sample 2-13
+// Combined implementation of timeout, retry, throttle, distinction check and race condition handling
+
+public class ServiceCallWrapper<TParam, TResult>
+{
+    private readonly Func<TParam, Task<TResult>> wrappedServiceCall;
+    public ServiceCallWrapper(Func<TParam, Task<TResult>> wrappedServiceCall)
+    {
+        this.wrappedServiceCall = wrappedServiceCall;
+    }
+
+    // Throttle global variables
+    private readonly TimeSpan throttleInterval = TimeSpan.FromMilliseconds(500);
+    private DateTime lastThrottledParameterDate;
+
+    // Distinct global variables
+    private TParam lastDistinctParameter;
+
+    // Retry global variables 
+    private readonly int numberOfRetries = 3;
+
+    // Timeout global variables 
+    private readonly TimeSpan timeoutInterval = TimeSpan.FromMilliseconds(500);
+
+    // Switch global variables 
+    private Task<TResult> lastCall;
+
+    // Callback events 
+    public event Action<TResult> CallBack;
+    public event Action<Exception> ErrorCallBack;
+
+    public async void ServiceCall(TParam query)
+    {
+        try
+        {
+            // Throttle logic
+            this.lastThrottledParameterDate = DateTime.Now;
+            await Task.Delay(this.throttleInterval);
+
+            if (DateTime.Now - this.lastThrottledParameterDate < this.throttleInterval) return;
+
+            // Distinct logic
+            if (this.lastDistinctParameter?.Equals(query) != true)
+                this.lastDistinctParameter = query;
+            else
+                return;
+
+            var newCall = Task.Run(async () =>
+            {
+                // Retry logic
+                for (var tries = 0; tries < this.numberOfRetries; tries++)
+                {
+                    try
+                    {
+                        // Timeout logic
+```
+```csharp
+                        var newTask = this.wrappedServiceCall(query);
+```
+```
+                        var timeoutTask = Task.Delay(this.timeoutInterval);
+
+                        var firstTaskToEnd = await Task.WhenAny(newTask, timeoutTask);
+
+                        if (newTask == firstTaskToEnd) return newTask.Result;
+                        else throw new Exception("Timeout");
+                    }
+                    catch { /* deal with the exception */ }
+                }
+
+                throw new Exception("Out of retries");
+            });
+
+            // Switch logic
+            this.lastCall = newCall;
+
+            var result = await newCall;
+
+            if (this.lastCall == newCall)
+                this.CallBack?.Invoke(result);
+        }
+
+        catch (Exception ex)
+        {
+            this.ErrorCallBack?.Invoke(ex);
+        }
+    }
+}
+```
+
+Even though this implementation is not quite pretty on the inside, using it is fairly simple.
+
+```csharp
+// Code Sample 2-14
+// Using the ServiceCallWrapper class to get suggestions for queries
+// Triggered by every new character entered into the SearchBox
+
+var suggestionsServiceHelper = new ServiceCallWrapper<string, IEnumerable<string>>(this.searchService.GetSuggestionsForQuery);
+
+// Subscribing to events
+this.searchBox.TextChanged += (s, e) => suggestionsServiceHelper.ServiceCall(this.searchBox.Text);
+
+// Registering callback methods
+suggestionsServiceHelper.CallBack += this.CallBack;
+suggestionsServiceHelper.ErrorCallBack += this.ErrorCallBack;
+```
+
+```csharp
+// Code Sample 2-15
+// Using the ServiceCallWrapper class to get results for queries
+// Triggered by clicking on the Search Button, clicking on a suggestion or hitting the Enter key
+
+var resultsServiceHelper = new ServiceCallWrapper<string, IEnumerable<string>>(this.searchService.GetResultsForQuery);
+            
+// Subscribing to events
+this.searchButton.Click += (s, e) => resultsServiceHelper.ServiceCall(this.searchBox.Text);
+this.suggestions.ItemClick += (s, e) => resultsServiceHelper.ServiceCall(e.ClickedItem as string);
+this.searchBox.KeyDown += (s, e) =>
+{
+    if (e.Key == VirtualKey.Enter)
+        resultsServiceHelper.ServiceCall(this.searchBox.Text);
+};
+
+// Registering callback methods
+resultsServiceHelper.CallBack += this.CallBack;
+resultsServiceHelper.ErrorCallBack += this.ErrorCallBack;
+```
+
+Just for the record the two event handlers for `CallBack` and `ErrorCallBack` have the following implementation in the sample code.
+
+```csharp
+// Code Sample 2-16
+// Implementation for the callback event handlers
+
+private void CallBack(IEnumerable<string> items)
+{
+    this.errorLabel.Visibility = Visibility.Collapsed;
+    this.suggestions.ItemsSource = items;
+}
+
+private void ErrorCallBack(Exception exception)
+{
+    this.errorLabel.Visibility = Visibility.Visible;
+    this.errorLabel.Text = exception.Message;
+}
+```
 
 ## Rx approach
 
