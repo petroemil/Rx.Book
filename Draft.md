@@ -17,6 +17,8 @@
   + [Rx approach](#rx-approach)
   + [Summary](#summary)
 + [Rx = Observables + LINQ + Schedulers](#rx--observables--linq--schedulers)
+  + [Preparation](#preparations-1)
+  + [Observable streams](#observable-streams)
 
 # Introduction
 
@@ -811,4 +813,56 @@ In the next chapter you will learn about the depth of Rx, the concepts behind it
 # Rx = Observables + LINQ + Schedulers
 
 ## Preparations
+
+Just for the sake of having an app that you can use to play with and run the code samples, let's create a UWP "Console" application. The reason for it is that most of the time a traditional console where you can print lines is more than enough, but for some of the examples you will need things like a `TextBox` or pointer events.
+
+Just like in the previous chapter, let's create an empty UWP app...
+* Open Visual Studio (2015)
+* Create a new project (`File / New / Project`)
+* In the dialog window select `Windows / Universal` on the left hand pane
+* Then the `Blank App (Universal Windows)` project template on the right.
+* Add the Rx NuGet package to the project by typing `PM> Install-Package System.Reactive` to the Package Manager console
+* Add the Ix NuGet package to the project by typing `PM> Install-Package System.Interactive` to the Package Manager console - this is an extension for regular collections that adds a few more useful operators to the catalogue of LINQ operators.
+* Add a new class file to the project that will contain a little extension method for the `TextBlock` control <br/>
+This extension method will allow you to write on the screen line-by-line and it will always keep only the last 25 lines.
+
+```csharp
+// Code Sample 3-1
+// Extension method for the TextBlock class
+
+public static class TextBlockExtensions
+{
+    public static void WriteLine(this TextBlock textBlock, object obj)
+    {
+        var lines = textBlock.Text
+            .Split(new string[] { Environment.NewLine }, StringSplitOptions.None)
+            .TakeLast(24)
+            .Concat(new[] { obj.ToString() });
+
+        textBlock.Text = string.Join(Environment.NewLine, lines);
+    }
+}
+```
+
+* The next step is to create the UI. It will be very simple just a `TextBlock` and some styling to make it look console-like
+
+```XML
+// Code Sample 3-2
+// UWP Console app UI
+
+<Grid Background="Black">
+    <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" />
+</Grid>
+```
+
+* With the `TextBlock` and the extension method defined, you can now write things like this in the page's code behind file
+
+```csharp
+// Code Sample 3-3
+// Sample usage of the extension method on the TextBlock
+
+Console.WriteLine("Hello Rx");
+```
+
+## Observable streams
 

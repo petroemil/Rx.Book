@@ -7,8 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="#222222">
-        <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" 
-                   FontSize="24" Foreground="#BBBBBB" />
+    <Grid Background="Black">
+        <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" />
     </Grid>
 </Page>
