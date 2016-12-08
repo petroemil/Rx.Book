@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSamples", "RxSamples\RxSamples.csproj", "{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,26 @@ Global
 		{715011F4-B0E8-4E1E-A44A-93E367DA730D}.Release|x86.ActiveCfg = Release|x86
 		{715011F4-B0E8-4E1E-A44A-93E367DA730D}.Release|x86.Build.0 = Release|x86
 		{715011F4-B0E8-4E1E-A44A-93E367DA730D}.Release|x86.Deploy.0 = Release|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|ARM.ActiveCfg = Debug|ARM
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|ARM.Build.0 = Debug|ARM
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|ARM.Deploy.0 = Debug|ARM
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|x64.ActiveCfg = Debug|x64
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|x64.Build.0 = Debug|x64
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|x64.Deploy.0 = Debug|x64
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|x86.ActiveCfg = Debug|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|x86.Build.0 = Debug|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Debug|x86.Deploy.0 = Debug|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|Any CPU.ActiveCfg = Release|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|ARM.ActiveCfg = Release|ARM
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|ARM.Build.0 = Release|ARM
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|ARM.Deploy.0 = Release|ARM
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|x64.ActiveCfg = Release|x64
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|x64.Build.0 = Release|x64
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|x64.Deploy.0 = Release|x64
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|x86.ActiveCfg = Release|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|x86.Build.0 = Release|x86
+		{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,14 @@
+﻿<Page
+    x:Class="RxSamples.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:RxSamples"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="#222222">
+        <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" 
+                   FontSize="24" Foreground="#BBBBBB" />
+    </Grid>
+</Page>

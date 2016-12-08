@@ -809,3 +809,6 @@ In this chapter you saw a good step-by-step example to compare the pain of deali
 In the next chapter you will learn about the depth of Rx, the concepts behind it, a number of commonly used operators and more.
 
 # Rx = Observables + LINQ + Schedulers
+
+## Preparations
+
