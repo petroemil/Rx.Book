@@ -15,8 +15,8 @@
     + [Race condition](#race-condition)
     + [All together](#all-together)
   + [Rx approach](#rx-approach)
-  + [Summary](#Summary)
-+ [Rx = Observables + LINQ + Schedulers](#rx---observables---linq---schedulers)
+  + [Summary](#summary)
++ [Rx = Observables + LINQ + Schedulers](#rx--observables--linq--schedulers)
 
 # Introduction
 
@@ -792,7 +792,7 @@ Once you converted the event into an observable stream, you can start doing vari
 
 You can also do some filtering as you can see with the `enterKeyPressed` example. You subscribe to the event, do the filtering based on the pressed key and extract the useful information. It means it will produce a new event containing the content of the `SearchBox` every time the user hits the Enter key.
 
-You should notice the creation of the `mergedInput` observable. You defined 3 separate observables, but you actually want to do the exact same thing with them, so it would be better to have all of those merged in just one stream. That's what you can use the `Mergre()` operator for.
+You should notice the creation of the `mergedInput` observable. You defined 3 separate observables, but you actually want to do the exact same thing with them, so it would be better to have all of those merged in just one stream. That's what you can use the `Merge()` operator for.
 
 Once you have your source in place, you can finally use your prepared extension method for the `ServiceCallWrapper` class and just naturally use it as part of the pipeline definition, just like any other operator.
 
