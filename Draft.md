@@ -913,3 +913,251 @@ Even though you now have this console application, you will also have a more vis
 They will look something like this:
 
 ![](/Marble%20Diagrams/Sample.png)
+
+### Generator operators
+
+#### Never
+
+![](/Marble%20Diagrams/Never.png)
+
+#### Empty
+
+![](/Marble%20Diagrams/Empty.png)
+
+#### Return
+
+![](/Marble%20Diagrams/Return.png)
+
+#### Throw
+
+![](/Marble%20Diagrams/Throw.png)
+
+#### Range
+
+![](/Marble%20Diagrams/Range.png)
+
+#### Generate
+
+![](/Marble%20Diagrams/Generate.png)
+
+#### ToObservable (???)
+
+![](/Marble%20Diagrams/ToObservable.png)
+
+#### Interval
+
+![](/Marble%20Diagrams/Interval.png)
+
+#### Timer
+
+![](/Marble%20Diagrams/Timer.png)
+
+![](/Marble%20Diagrams/TimerWithDelay.png)
+
+### Converter operators
+
+#### ToObservable (???)
+
+#### FromEvent
+
+#### FromEventPattern
+
+![](/Marble%20Diagrams/FromEventPattern.png)
+
+#### FromAsync
+
+![](/Marble%20Diagrams/FromAsync.png)
+
+### Hot and Cold observables
+
+### Subjects
+
+#### Subject
+
+#### ReplaySubject
+
+#### BehaviorSubject
+
+#### AsyncSubject
+
+## LINQ
+
+### Projection
+
+#### Select
+
+#### SelectMany
+
+#### Amb
+
+![](/Marble%20Diagrams/Amb.png)
+
+#### Switch
+
+![](/Marble%20Diagrams/Switch.png)
+
+### Filtering
+
+#### Where
+
+![](/Marble%20Diagrams/Where.png)
+
+#### Distinct, DistinctUntilChanged
+
+![](/Marble%20Diagrams/DistinctUntilChanged.png)
+
+#### Skip
+
+![](/Marble%20Diagrams/Skip.png)
+
+![](/Marble%20Diagrams/SkipLast.png)
+
+![](/Marble%20Diagrams/SkipUntil.png)
+
+![](/Marble%20Diagrams/SkipWhile.png)
+
+#### Take
+
+![](/Marble%20Diagrams/Take.png)
+
+![](/Marble%20Diagrams/TakeLast.png)
+
+![](/Marble%20Diagrams/TakeUntil.png)
+
+![](/Marble%20Diagrams/TakeWhile.png)
+
+![](/Marble%20Diagrams/SkipAndTake.png)
+
+#### Sample
+
+### Selectors
+
+#### First
+
+![](/Marble%20Diagrams/First.png)
+
+#### Last
+
+![](/Marble%20Diagrams/Last.png)
+
+#### ElementAt
+
+![](/Marble%20Diagrams/ElementAt.png)
+
+#### Single
+
+![](/Marble%20Diagrams/Single.png)
+
+#### DefaultIfEmpty
+
+![](/Marble%20Diagrams/DefaultIfEmpty.png)
+
+#### StartWith
+
+![](/Marble%20Diagrams/StartWith.png)
+
+### Maths
+
+![](/Marble%20Diagrams/Max.png)
+
+### Timing
+
+#### Delay
+
+![](/Marble%20Diagrams/Delay.png)
+
+#### Throttle
+
+![](/Marble%20Diagrams/Throttle.png)
+
+### Error handling
+
+#### Timeout
+
+![](/Marble%20Diagrams/Timeout.png)
+
+#### Retry
+
+#### OnErrorResumeNext
+
+![](/Marble%20Diagrams/OnErrorResumeNext.png)
+
+#### Catch
+
+#### Finally
+
+### Compare
+
+#### SequenceEqual
+
+#### Contains
+
+#### IsEmpty
+
+#### All
+
+#### Any
+
+### Repeaters
+
+#### Repeat
+
+#### DoWhile
+
+### Monitoring
+
+#### Do
+
+#### Timestamp
+
+#### Timeinterval
+
+#### Materialize / Dematerialize
+
+### Combiners
+
+#### Concat
+
+![](/Marble%20Diagrams/Concat.png)
+
+#### Merge
+
+![](/Marble%20Diagrams/Merge.png)
+
+#### Zip
+
+![](/Marble%20Diagrams/Zip.png)
+
+#### CombineLatest
+
+![](/Marble%20Diagrams/CombineLatest.png)
+
+### Windowing
+
+#### Window and Buffer
+
+#### Scan and Aggregate
+
+![](/Marble%20Diagrams/Scan.png)
+
+![](/Marble%20Diagrams/Aggregate.png)
+
+#### GroupBy
+
+![](/Marble%20Diagrams/GroupBy.png)
+
+## Schedulers
+
+### CoreDispatcherScheduler
+
+### TaskPoolScheduler
+
+### ThreadPoolScheduler
+
+### ImmediateScheduler
+
+### HistoricalScheduler
+
+## Rx + Async
+
+## Summary
