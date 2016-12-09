@@ -912,4 +912,5 @@ Even though you now have this console application, you will also have a more vis
 
 They will look something like this:
 
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png)
+![](https://github.com/petroemil/Rx.Book/raw/master/Marble%20Diagrams/Sample.png)
+![](/Marble%20Diagrams/Sample.png)
