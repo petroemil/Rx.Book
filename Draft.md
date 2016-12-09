@@ -912,5 +912,4 @@ Even though you now have this console application, you will also have a more vis
 
 They will look something like this:
 
-![](https://github.com/petroemil/Rx.Book/raw/master/Marble%20Diagrams/Sample.png)
 ![](/Marble%20Diagrams/Sample.png)
