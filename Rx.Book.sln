@@ -17,6 +17,54 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSamples", "RxSamples\RxSamples.csproj", "{F4943245-9C83-42E9-AEDB-AF0BC74CD09D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Marble Diagrams", "Marble Diagrams", "{1066D06C-2D5F-45EB-AB16-F149A198E490}"
+	ProjectSection(SolutionItems) = preProject
+		Marble Diagrams\Aggregate.png = Marble Diagrams\Aggregate.png
+		Marble Diagrams\Amb.png = Marble Diagrams\Amb.png
+		Marble Diagrams\CombineLatest.png = Marble Diagrams\CombineLatest.png
+		Marble Diagrams\Concat.png = Marble Diagrams\Concat.png
+		Marble Diagrams\DefaultIfEmpty.png = Marble Diagrams\DefaultIfEmpty.png
+		Marble Diagrams\Delay.png = Marble Diagrams\Delay.png
+		Marble Diagrams\DistinctUntilChanged.png = Marble Diagrams\DistinctUntilChanged.png
+		Marble Diagrams\ElementAt.png = Marble Diagrams\ElementAt.png
+		Marble Diagrams\Empty.png = Marble Diagrams\Empty.png
+		Marble Diagrams\First.png = Marble Diagrams\First.png
+		Marble Diagrams\FromAsync.png = Marble Diagrams\FromAsync.png
+		Marble Diagrams\FromEvent.png = Marble Diagrams\FromEvent.png
+		Marble Diagrams\Generate.png = Marble Diagrams\Generate.png
+		Marble Diagrams\GroupBy.png = Marble Diagrams\GroupBy.png
+		Marble Diagrams\Interval.png = Marble Diagrams\Interval.png
+		Marble Diagrams\Last.png = Marble Diagrams\Last.png
+		Marble Diagrams\Max.png = Marble Diagrams\Max.png
+		Marble Diagrams\Merge.png = Marble Diagrams\Merge.png
+		Marble Diagrams\Never.png = Marble Diagrams\Never.png
+		Marble Diagrams\OnErrorResumeNext.png = Marble Diagrams\OnErrorResumeNext.png
+		Marble Diagrams\Range.png = Marble Diagrams\Range.png
+		Marble Diagrams\Return.png = Marble Diagrams\Return.png
+		Marble Diagrams\Sample.png = Marble Diagrams\Sample.png
+		Marble Diagrams\Scan.png = Marble Diagrams\Scan.png
+		Marble Diagrams\Single.png = Marble Diagrams\Single.png
+		Marble Diagrams\Skip.png = Marble Diagrams\Skip.png
+		Marble Diagrams\SkipAndTake.png = Marble Diagrams\SkipAndTake.png
+		Marble Diagrams\SkipLast.png = Marble Diagrams\SkipLast.png
+		Marble Diagrams\SkipUntil.png = Marble Diagrams\SkipUntil.png
+		Marble Diagrams\SkipWhile.png = Marble Diagrams\SkipWhile.png
+		Marble Diagrams\StartWith.png = Marble Diagrams\StartWith.png
+		Marble Diagrams\Switch.png = Marble Diagrams\Switch.png
+		Marble Diagrams\Take.png = Marble Diagrams\Take.png
+		Marble Diagrams\TakeLast.png = Marble Diagrams\TakeLast.png
+		Marble Diagrams\TakeUntil.png = Marble Diagrams\TakeUntil.png
+		Marble Diagrams\TakeWhile.png = Marble Diagrams\TakeWhile.png
+		Marble Diagrams\Throttle.png = Marble Diagrams\Throttle.png
+		Marble Diagrams\Throw.png = Marble Diagrams\Throw.png
+		Marble Diagrams\Timeout.png = Marble Diagrams\Timeout.png
+		Marble Diagrams\Timer.png = Marble Diagrams\Timer.png
+		Marble Diagrams\TimerWithDelay.png = Marble Diagrams\TimerWithDelay.png
+		Marble Diagrams\ToObservable.png = Marble Diagrams\ToObservable.png
+		Marble Diagrams\Where.png = Marble Diagrams\Where.png
+		Marble Diagrams\Zip.png = Marble Diagrams\Zip.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,5 +156,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1066D06C-2D5F-45EB-AB16-F149A198E490} = {143E9BA4-ECB4-4C80-BBE7-36BB0531AFFB}
 	EndGlobalSection
 EndGlobal

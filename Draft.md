@@ -866,3 +866,50 @@ Console.WriteLine("Hello Rx");
 
 ## Observable streams
 
+As you could already see it in the previous chapters, Rx at it's core gives you the ability to handle asynchronous data streams and perform various operations by applying any number of operators.
+
+Just as a recap, the core interfaces are the `IObservable<T>` and `IObserver<T>`.
+
+The `IObservalbe<T>` as an observable object gives you the ability to subscribe to it and "observe it" through its only method, the `Subscribe()`.
+
+The `IObserver<T>` interface defines how the observer object looks like. It has an `OnNext()` method that will be called every time the observable emits a new event (so 0 or more times), and `OnError()` and `OnCompleted()` methods that will be called when the observer terminates, either naturally or due to an error. These latter two methods are terminating methods and they can be called 0 or 1 time during the lifecycle of an observable object. They are also mutually exclusive, meaning you can't see both of them coming emitted by the same observable.
+
+As it's usually "phrased": `OnNext* (OnError | OnCompleted)?`
+
+As a last point before you'd dive into the details of how to create and how to transform existing asynchronous data sources (like an `event` or a `Task`) to observable streams, let's take a quick look at the subscription and the terminology you will see for the rest of this book.
+
+There are 3 main groups of overloads for the `Subscribe()` method.
+* Subscribing by passing an `IObserver` object
+* Subscribing by defining the `OnNext()`, and optionally the `OnCompleted()` and/or `OnError()` callback actions as lambda expressions
+  * OnNext
+  * OnNext + OnError
+  * OnNext + OnCompleted
+  * OnNext + OnError + OnCompleted
+* Subscribing without passing any parameter - it will make sense later
+* And all of the above with an optional `CancellationToken` parameter
+
+Throughout this book you will use the second one (passing the lambda expressions) as that's the fastest to implement. Obviously in a real application you would want to build your `Observable` object and build a unit test suite around it, something that you can't quite do with inline defined lambda functions.
+
+The patter that you should follow for the rest of the examples is the following:
+
+```csharp
+// Code Sample 3-4
+// Subscribtion example
+
+source
+    .ObserveOnDispatcher()
+    .Subscribe(
+        next => Console.WriteLine($"OnNext: {next}"),
+        error => Console.WriteLine($"OnError: {error.Message}"),
+        () => Console.WriteLine("OnCompleted"));
+```
+
+The `ObserveOnDispatcher()` is required to make sure no matter which thred the stream is coming from, it's definitely marshalled to the UI thread.
+
+And the `Subscribe()` method is fairly trivial, you just handel all possible notification types by providing all three of the callbacks for `OnNext`, `OnError`and `OnCompleted`.
+
+Even though you now have this console application, you will also have a more visual marble diagram at every operator to describe what they are doing.
+
+They will look something like this:
+
+![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png)
