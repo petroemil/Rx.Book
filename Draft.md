@@ -962,7 +962,7 @@ They will look something like this:
 
 #### FromEventPattern
 
-![](/Marble%20Diagrams/FromEventPattern.png)
+![](/Marble%20Diagrams/FromEvent.png)
 
 #### FromAsync
 
