@@ -1046,7 +1046,13 @@ var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 
 ### Converter operators
 
+Even though you learned a couple of ways to construct "observable primitives", in reality it's more likely that you will want to convert some kind of existing data source to an observable stream. This data source can be an existing collection, an asynchronous operation represented by a `Task` object, an `event`, etc.
+
 #### ToObservable
+
+Two very common scenarios are collections and `Task` objects. For these you can just use the `ToObservable()` extension method to turn them into an observable stream.
+
+If you have some kind of `IEnumerable` datasource, you can just call the extension method on it and turn it into an `IObservable` stream.
 
 ```csharp 
 // Code Sample 3-14
@@ -1057,6 +1063,9 @@ var sourceFromEnumerable = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", 
 
 ![](Marble%20Diagrams/ToObservable.png)
 
+Also if you have a `Task` object, you can just call the extension method to turn it into a stream.</br>
+Even though the extension method is present and you are free to use it and in some cases it's perfectly fine to use it, I would personally suggest to use the `FromAsync` operator, because it comes with a few important behaviour differences compared to the `ToObservable` operator.
+
 ```csharp
 // Code Sample 3-15
 // Using the ToObservable extension method on a Task
@@ -1064,17 +1073,73 @@ var sourceFromEnumerable = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", 
 var sourceFromTask = Task.FromResult("A").ToObservable();
 ```
 
-![](Marble%20Diagrams/Return.png)
-
-#### FromEvent
-
-#### FromEventPattern
-
-![](Marble%20Diagrams/FromEvent.png)
+![](Marble%20Diagrams/FromAsync.png)
 
 #### FromAsync
 
+If you have an asynchronous operation that is represented by a `Task`, you should use the `FromAsync()` operator to convert it to an observable stream. The reason for that is 2 words: lazy evaulation. 
+
+The `ToObservable()` operator can only act on an existing `Task` object. If you have some kind of retry logic defined in your stream description, in case of using the `ToObservable()` operator, it will always go back to the same `Task` object and query it's state. There is no way to somehow rerun the function that produced that `Task`.
+
+But if you use the `FromAsync()` operator that wraps the function itself that produces the `Task`, if you re-subscribe (for example because of a failure), it will actually re-execute the function, producding a new `Task` with that, so at least you have the chance to recover from a transient error.
+
+```csharp
+// Code Sample 3-16
+// Using the FromAsync operator
+
+var goodExample = Observable.FromAsync(SomeAsyncOperation);
+```
+
 ![](Marble%20Diagrams/FromAsync.png)
+
+#### FromEventPattern
+
+An other good candidate to convert to Rx stream is the .NET event.
+
+Most cases when you have to deal with events they have a typical signature that looks something like `(object sender, EventArgs args)`. As long as the event follows this signature, you can use a simplified way to convert these events to observables, like this:
+
+```csharp
+var source = Observable.FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown));
+```
+
+You can choose not to specify any generic type parameter in which case it will default to the most generic `(object, EventArgs)` combination. 
+
+You can choose to specify only the actual type of the `args` parameter (as you can see in the example above), or to explicitly specify both the type of the `sender` and the `args` parameters.
+
+![](Marble%20Diagrams/FromEvent.png)
+
+#### FromEvent
+
+In case you have an event that doesn't follow this pattern, your life will be slightly more complicated.
+
+Let's assume you have an event like this:
+
+``` csharp
+public event Action<string, int, double> MySpecialEvent;
+```
+
+In this case your converter operator will look like this:
+
+```csharp
+var source = Observable.FromEvent<Action<string, int, double>, Tuple<string, int, double>>(
+    rxOnNext => (s, i, d) => rxOnNext(Tuple.Create(s, i, d)),
+    eventHandler => MySpecialEvent += eventHandler, 
+    eventHandler => MySpecialEvent -= eventHandler);
+```
+
+So let's see what is happening here.
+
+First of all, you have to be able to call the `FromEvent` operator, which requires 2 generic type parameters, the type of the event and the type of the event arguments. The second one is necessary because in the world of events when an event happens, a subscribed method gets called potentially with many parameters, but in Rx world when an event happens, a new object is placed into the stream. So you have to wrap the received parameters into one object.
+
+`void MySpecialEventHandler(string s, int i, double d)` VS `Tuple<string, int, double>`
+
+Let's see the method parameters. After providing the type of the `event` and the type of the `args`, Rx internally prepares and exposes an `OnNext<TArgs>` method to push new elements into the stream. So here's what's happening:
+
+The operator gives a reference to this `OnNext` function to you, and expects you to return a method that matches the signature of the original event, so it can be used as an event handler, and because it has a reference to the `OnNext` method, it should do the conversion from the method parameters to the `Tuple` object and push it into the stream.
+
+Once you got your head around this rather complicated line, the last 2 parameters of the method are fairly simple, you just get a reference to the event handler (prepared by the system) that you have to subscribe to and unsubscribe from the original `event`.
+
+It's worth mentioning that this example is the worst case scenario. If your event doesn't have any parameters or only has one, you don't have to bother with this cimplicated conversion logic, you just have to provide the subscribe / unsubscribe functions.
 
 ### Hot and Cold observables
 

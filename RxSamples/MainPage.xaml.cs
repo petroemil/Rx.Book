@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -90,6 +93,49 @@ namespace RxSamples
         private void ToObservable()
         {
             var source = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }.ToObservable();
+        }
+
+        private async Task SomeAsyncOperation()
+        {
+            // Simulating random execution time    
+            var random = new Random();
+            await Task.Delay(random.Next(300));
+
+            // Simulating failure         
+            if (random.Next(100) < 10)
+                throw new Exception("Error!");
+        }
+
+        private void FromAsync_GoodExample()
+        {
+            var goodExample = Observable.FromAsync(SomeAsyncOperation);
+        }
+
+        private void FromAsync_BadExample()
+        {
+            var badExample = SomeAsyncOperation().ToObservable();
+        }
+        
+        private void FromEventPattern()
+        {
+            var source = Observable.FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown));
+        }
+
+        public event Action<string, int, double> MySpecialEvent;
+        private void FromEvent()
+        {
+            var source = Observable.FromEvent<Action<string, int, double>, Tuple<string, int, double>>(
+                rxOnNext => (s, i, d) => rxOnNext(Tuple.Create(s, i, d)),
+                eventHandler => MySpecialEvent += eventHandler, 
+                eventHandler => MySpecialEvent -= eventHandler);
+        }
+
+        public event Action<string> MyOneParameterEvent;
+        private void FromEvent_OneParameter()
+        {
+            var source = Observable.FromEvent<string>(
+                eventHandler => MyOneParameterEvent += eventHandler,
+                eventHandler => MyOneParameterEvent -= eventHandler);
         }
     }
 }
