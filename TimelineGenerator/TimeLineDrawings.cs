@@ -129,7 +129,7 @@ namespace TimelineGenerator
         public async Task Timer()
         {
             this.timelineDrawer.DrawTimeLine(1);
-            this.timelineDrawer.AddEventToTimeLine(0, 900, "A");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "0");
             this.timelineDrawer.AddCompletitionEventToTimeLine(0, 1000, false);
         }
 
