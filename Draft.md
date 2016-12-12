@@ -1,24 +1,22 @@
 # Table of contents
 
-+ [Introduction](#introduction)
++ **Introduction**
   + [The problem - asynchrony](#the-problem---asynchrony)
   + [What is an Observable?](#what-is-an-observable)
   + [What is LINQ?](#what-is-linq)
   + [LINQ vs Rx](#linq-vs-rx)
-+ [Hello Rx](#hello-rx)
++ **Hello Rx**
   + [Preparations](#preparations)
   + [Traditional approach](#traditional-approach)
-    + [Timeout](#timeout)
-    + [Retry](#retry)
-    + [Throttle](#throttle)
-    + [Distinct](#distinct)
-    + [Race condition](#race-condition)
-    + [All together](#all-together)
   + [Rx approach](#rx-approach)
   + [Summary](#summary)
-+ [Rx = Observables + LINQ + Schedulers](#rx--observables--linq--schedulers)
++ **Rx = Observables + LINQ + Schedulers**
   + [Preparation](#preparations-1)
   + [Observable streams](#observable-streams)
+  + [LINQ](#linq)
+  + [Schedulers](#shedulers)
+  + [Rx + Async](#rx--async)
+  + [Summary](#summary-1)
 
 # Introduction
 
@@ -1050,7 +1048,23 @@ var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 
 #### ToObservable
 
+```csharp 
+// Code Sample 3-14
+// Using the ToObservable extension method on a collection
+
+var sourceFromEnumerable = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }.ToObservable();
+```
+
 ![](Marble%20Diagrams/ToObservable.png)
+
+```csharp
+// Code Sample 3-15
+// Using the ToObservable extension method on a Task
+
+var sourceFromTask = Task.FromResult("A").ToObservable();
+```
+
+![](Marble%20Diagrams/Return.png)
 
 #### FromEvent
 

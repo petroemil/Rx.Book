@@ -12,7 +12,7 @@ namespace TimelineGenerator
     public class TimeLineRenderer
     {
         private readonly Border border;
-        private readonly double scale = 2;
+        private readonly double scale = 1.5;
 
         public TimeLineRenderer(Border border)
         {

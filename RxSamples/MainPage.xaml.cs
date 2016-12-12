@@ -86,5 +86,10 @@ namespace RxSamples
         {
             var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
         }
+
+        private void ToObservable()
+        {
+            var source = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }.ToObservable();
+        }
     }
 }
