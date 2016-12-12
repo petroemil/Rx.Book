@@ -912,7 +912,7 @@ Even though you now have this console application, you will also have a more vis
 
 They will look something like this:
 
-![](/Marble%20Diagrams/Sample.png)
+![](Marble%20Diagrams/Sample.png)
 
 ### Generator operators
 
@@ -929,7 +929,7 @@ The `Never()` operator represents the simplest possible stream, a stream that do
 var source = Observable.Never<string>();
 ```
 
-![](/Marble%20Diagrams/Never.png)
+![](Marble%20Diagrams/Never.png)
 
 #### Empty
 
@@ -942,7 +942,7 @@ The empty stream is a stream that yields no `OnNext`, just an `OnCompleted` even
 var source = Observable.Empty<string>();
 ```
 
-![](/Marble%20Diagrams/Empty.png)
+![](Marble%20Diagrams/Empty.png)
 
 #### Return
 
@@ -955,7 +955,7 @@ Similarly to the `Task.FromResult()` you can use the `Observable.Return()` opera
 var source = Observable.Return("A");
 ```
 
-![](/Marble%20Diagrams/Return.png)
+![](Marble%20Diagrams/Return.png)
 
 #### Throw
 
@@ -968,7 +968,7 @@ Yet again, bringing the analogy from the `Task` world, just like you can use to 
 var source = Observable.Throw<string>(new Exception("X"));
 ```
 
-![](/Marble%20Diagrams/Throw.png)
+![](Marble%20Diagrams/Throw.png)
 
 #### Range
 
@@ -981,7 +981,7 @@ The same way you can use the `Enumerable.Range()` operator to generate a(n `IEnu
 var source = Observable.Range(0, 10);
 ```
 
-![](/Marble%20Diagrams/Range.png)
+![](Marble%20Diagrams/Range.png)
 
 #### Generate
 
@@ -998,7 +998,7 @@ var source = Observable.Generate(
     resultSelector: i => i * i);
 ```
 
-![](/Marble%20Diagrams/Generate.png)
+![](Marble%20Diagrams/Generate.png)
 
 #### Interval
 
@@ -1017,7 +1017,7 @@ If you had some kind of `Timer` based logic in your application before, where yo
 var source = Observable.Interval(TimeSpan.FromMilliseconds(100));
 ```
 
-![](/Marble%20Diagrams/Interval.png)
+![](Marble%20Diagrams/Interval.png)
 
 #### Timer
 
@@ -1033,7 +1033,7 @@ var sourceRelative = Observable.Timer(TimeSpan.FromMilliseconds(500));
 var sourceAbsolute = Observable.Timer(new DateTime(2063, 4, 4));
 ```
 
-![](/Marble%20Diagrams/Timer.png)
+![](Marble%20Diagrams/Timer.png)
 
 On the other hand you can also provide a second `TimeSpan` parameter in which case the stream won't terminate after just one element, but it will keep generating subsequent elements with the specified time between them.
 
@@ -1044,23 +1044,23 @@ On the other hand you can also provide a second `TimeSpan` parameter in which ca
 var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 ```
 
-![](/Marble%20Diagrams/TimerWithDelay.png)
+![](Marble%20Diagrams/TimerWithDelay.png)
 
 ### Converter operators
 
 #### ToObservable
 
-![](/Marble%20Diagrams/ToObservable.png)
+![](Marble%20Diagrams/ToObservable.png)
 
 #### FromEvent
 
 #### FromEventPattern
 
-![](/Marble%20Diagrams/FromEvent.png)
+![](Marble%20Diagrams/FromEvent.png)
 
 #### FromAsync
 
-![](/Marble%20Diagrams/FromAsync.png)
+![](Marble%20Diagrams/FromAsync.png)
 
 ### Hot and Cold observables
 
@@ -1084,43 +1084,43 @@ var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 
 #### Amb
 
-![](/Marble%20Diagrams/Amb.png)
+![](Marble%20Diagrams/Amb.png)
 
 #### Switch
 
-![](/Marble%20Diagrams/Switch.png)
+![](Marble%20Diagrams/Switch.png)
 
 ### Filtering
 
 #### Where
 
-![](/Marble%20Diagrams/Where.png)
+![](Marble%20Diagrams/Where.png)
 
 #### Distinct, DistinctUntilChanged
 
-![](/Marble%20Diagrams/DistinctUntilChanged.png)
+![](Marble%20Diagrams/DistinctUntilChanged.png)
 
 #### Skip
 
-![](/Marble%20Diagrams/Skip.png)
+![](Marble%20Diagrams/Skip.png)
 
-![](/Marble%20Diagrams/SkipLast.png)
+![](Marble%20Diagrams/SkipLast.png)
 
-![](/Marble%20Diagrams/SkipUntil.png)
+![](Marble%20Diagrams/SkipUntil.png)
 
-![](/Marble%20Diagrams/SkipWhile.png)
+![](Marble%20Diagrams/SkipWhile.png)
 
 #### Take
 
-![](/Marble%20Diagrams/Take.png)
+![](Marble%20Diagrams/Take.png)
 
-![](/Marble%20Diagrams/TakeLast.png)
+![](Marble%20Diagrams/TakeLast.png)
 
-![](/Marble%20Diagrams/TakeUntil.png)
+![](Marble%20Diagrams/TakeUntil.png)
 
-![](/Marble%20Diagrams/TakeWhile.png)
+![](Marble%20Diagrams/TakeWhile.png)
 
-![](/Marble%20Diagrams/SkipAndTake.png)
+![](Marble%20Diagrams/SkipAndTake.png)
 
 #### Sample
 
@@ -1128,53 +1128,53 @@ var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 
 #### First
 
-![](/Marble%20Diagrams/First.png)
+![](Marble%20Diagrams/First.png)
 
 #### Last
 
-![](/Marble%20Diagrams/Last.png)
+![](Marble%20Diagrams/Last.png)
 
 #### ElementAt
 
-![](/Marble%20Diagrams/ElementAt.png)
+![](Marble%20Diagrams/ElementAt.png)
 
 #### Single
 
-![](/Marble%20Diagrams/Single.png)
+![](Marble%20Diagrams/Single.png)
 
 #### DefaultIfEmpty
 
-![](/Marble%20Diagrams/DefaultIfEmpty.png)
+![](Marble%20Diagrams/DefaultIfEmpty.png)
 
 #### StartWith
 
-![](/Marble%20Diagrams/StartWith.png)
+![](Marble%20Diagrams/StartWith.png)
 
 ### Maths
 
-![](/Marble%20Diagrams/Max.png)
+![](Marble%20Diagrams/Max.png)
 
 ### Timing
 
 #### Delay
 
-![](/Marble%20Diagrams/Delay.png)
+![](Marble%20Diagrams/Delay.png)
 
 #### Throttle
 
-![](/Marble%20Diagrams/Throttle.png)
+![](Marble%20Diagrams/Throttle.png)
 
 ### Error handling
 
 #### Timeout
 
-![](/Marble%20Diagrams/Timeout.png)
+![](Marble%20Diagrams/Timeout.png)
 
 #### Retry
 
 #### OnErrorResumeNext
 
-![](/Marble%20Diagrams/OnErrorResumeNext.png)
+![](Marble%20Diagrams/OnErrorResumeNext.png)
 
 #### Catch
 
@@ -1212,19 +1212,19 @@ var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 
 #### Concat
 
-![](/Marble%20Diagrams/Concat.png)
+![](Marble%20Diagrams/Concat.png)
 
 #### Merge
 
-![](/Marble%20Diagrams/Merge.png)
+![](Marble%20Diagrams/Merge.png)
 
 #### Zip
 
-![](/Marble%20Diagrams/Zip.png)
+![](Marble%20Diagrams/Zip.png)
 
 #### CombineLatest
 
-![](/Marble%20Diagrams/CombineLatest.png)
+![](Marble%20Diagrams/CombineLatest.png)
 
 ### Windowing
 
@@ -1232,13 +1232,13 @@ var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 
 #### Scan and Aggregate
 
-![](/Marble%20Diagrams/Scan.png)
+![](Marble%20Diagrams/Scan.png)
 
-![](/Marble%20Diagrams/Aggregate.png)
+![](Marble%20Diagrams/Aggregate.png)
 
 #### GroupBy
 
-![](/Marble%20Diagrams/GroupBy.png)
+![](Marble%20Diagrams/GroupBy.png)
 
 ## Schedulers
 
