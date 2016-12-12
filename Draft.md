@@ -978,7 +978,7 @@ The same way you can use the `Enumerable.Range()` operator to generate a(n `IEnu
 // Code Sample 3-9
 // Using the Generate operator
 
-var source = Observable.Range(1, 5);
+var source = Observable.Range(0, 10);
 ```
 
 ![](/Marble%20Diagrams/Range.png)
@@ -993,7 +993,7 @@ Generate works in a very similar way to a traditional `for` loop. You have to pr
 
 var source = Observable.Generate(
     initialState: 0,
-    condition: i => i < 5,
+    condition: i => i < 10,
     iterate: i => i + 1,
     resultSelector: i => i * i);
 ```

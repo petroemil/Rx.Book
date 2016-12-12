@@ -55,7 +55,7 @@ namespace RxSamples
 
         private void Range()
         {
-            var source = Observable.Range(1, 5);
+            var source = Observable.Range(0, 10);
         }
 
         private void Generate()
