@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
@@ -17,48 +19,69 @@ namespace RxSamples
         public MainPage()
         {
             this.InitializeComponent();
+            this.Loaded += OnLoaded;
         }
 
-        public void TextBlockUsageSample()
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            this.Replay_CallingConnectBeforeTheTwoSubscribtions();
+        }
+
+        private void TextBlockUsageSample()
         {
             Console.WriteLine("Hello Rx");
         }
 
-        private void SubscriptionSample()
+        private void Subscribe<T>(IObservable<T> source, string subscribtionName)
         {
-            var source = Observable.Empty<int>();
-
             source
                 .ObserveOnDispatcher()
                 .Subscribe(
-                    next => Console.WriteLine($"OnNext: {next}"),
-                    error => Console.WriteLine($"OnError: {error.Message}"),
-                    () => Console.WriteLine("OnCompleted"));
+                    next => Console.WriteLine($"[{subscribtionName}] [OnNext]: {next}"),
+                    error => Console.WriteLine($"[{subscribtionName}] [OnError]: {error.Message}"),
+                    () => Console.WriteLine($"[{subscribtionName}] [OnCompleted]"));
+        }
+
+        private void SubscriptionSample()
+        {
+            var source = Observable.Empty<string>();
+
+            this.Subscribe(source, "");
         }
 
         private void Never()
         {
             var source = Observable.Never<string>();
+
+            this.Subscribe(source, "");
         }
 
         private void Empty()
         {
             var source = Observable.Empty<string>();
+
+            this.Subscribe(source, "");
         }
 
         private void Return()
         {
             var source = Observable.Return("A");
+
+            this.Subscribe(source, "");
         }
 
         private void Throw()
         {
             var source = Observable.Throw<string>(new Exception("X"));
+
+            this.Subscribe(source, "");
         }
 
         private void Range()
         {
             var source = Observable.Range(0, 10);
+
+            this.Subscribe(source, "");
         }
 
         private void Generate()
@@ -68,31 +91,43 @@ namespace RxSamples
                 condition: i => i < 5,
                 iterate: i => i + 1,
                 resultSelector: i => i * i);
+
+            this.Subscribe(source, "");
         }
 
         private void Interval()
         {
             var source = Observable.Interval(TimeSpan.FromMilliseconds(100));
+
+            this.Subscribe(source, "");
         }
 
         private void Timer_Relative()
         {
             var sourceRelative = Observable.Timer(TimeSpan.FromMilliseconds(500));
+
+            this.Subscribe(sourceRelative, "");
         }
 
         private void Timer_Absolute()
         {
             var sourceAbsolute = Observable.Timer(new DateTime(2063, 4, 4));
+
+            this.Subscribe(sourceAbsolute, "");
         }
 
         private void Timer_WithSubsequentElements()
         {
             var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
+
+            this.Subscribe(source, "");
         }
 
         private void ToObservable()
         {
             var source = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }.ToObservable();
+
+            this.Subscribe(source, "");
         }
 
         private async Task SomeAsyncOperation()
@@ -109,16 +144,22 @@ namespace RxSamples
         private void FromAsync_GoodExample()
         {
             var goodExample = Observable.FromAsync(SomeAsyncOperation);
+
+            this.Subscribe(goodExample, "");
         }
 
         private void FromAsync_BadExample()
         {
             var badExample = SomeAsyncOperation().ToObservable();
+
+            this.Subscribe(badExample, "");
         }
         
         private void FromEventPattern()
         {
             var source = Observable.FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown));
+
+            this.Subscribe(source, "");
         }
 
         public event Action<string, int, double> MySpecialEvent;
@@ -128,6 +169,8 @@ namespace RxSamples
                 rxOnNext => (s, i, d) => rxOnNext(Tuple.Create(s, i, d)),
                 eventHandler => MySpecialEvent += eventHandler, 
                 eventHandler => MySpecialEvent -= eventHandler);
+
+            this.Subscribe(source, "");
         }
 
         public event Action<string> MyOneParameterEvent;
@@ -136,6 +179,128 @@ namespace RxSamples
             var source = Observable.FromEvent<string>(
                 eventHandler => MyOneParameterEvent += eventHandler,
                 eventHandler => MyOneParameterEvent -= eventHandler);
+
+            this.Subscribe(source, "");
+        }
+
+        public event Action MyParameterlessEvent;
+        private void FromEvent_Parameterless()
+        {
+            var source = Observable.FromEvent(
+                eventHandler => MyParameterlessEvent += eventHandler,
+                eventHandler => MyParameterlessEvent -= eventHandler);
+
+            this.Subscribe(source, "");
+        }
+
+        public async void Publish_DemonstrateTheColdObservable()
+        {
+            var source = Observable.Interval(TimeSpan.FromSeconds(1));
+
+            // Subscribe with the 1st observer
+            this.Subscribe(source, "#1");
+
+            // Wait 3 seconds
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            // Subscribe with the 2nd observer
+            this.Subscribe(source, "#2");
+        }
+
+        public async void Publish_CallingConnectBeforeTheTwoSubscribtions()
+        {
+            var originalSource = Observable.Interval(TimeSpan.FromSeconds(1));
+            var publishedSource = originalSource.Publish();
+
+            // Call Connect to activate the source and subscribe immediately with the 1st observer
+            publishedSource.Connect();
+            this.Subscribe(publishedSource, "#1");
+
+            // Wait 3 seconds
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            // Subscribe with the 2nd observer
+            this.Subscribe(publishedSource, "#2");
+        }
+
+        public async void Publish_CallingConnectAfterTheFirstSubscribtion()
+        {
+            var originalSource = Observable.Interval(TimeSpan.FromSeconds(1));
+            var publishedSource = originalSource.Publish();
+
+            // Subscribe to the not-yet-activated source stream with the 1st observer
+            this.Subscribe(publishedSource, "#1");
+
+            // Wait 3 seconds
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            // Call Connect to activate the source and subscribe with the 2nd observer
+            publishedSource.Connect();
+            this.Subscribe(publishedSource, "#2");
+        }
+
+        public async void Replay_DemonstrateTheHotObservable()
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer.Start();
+
+            var source = Observable
+                .FromEventPattern(timer, nameof(timer.Tick))
+                .Select(e => DateTime.Now);
+
+            Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
+            this.Subscribe(source, "#1");
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
+            this.Subscribe(source, "#2");
+        }
+
+        public async void Replay_CallingConnectBeforeTheTwoSubscribtions()
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer.Start();
+
+            var originalSource = Observable
+                .FromEventPattern(timer, nameof(timer.Tick))
+                .Select(e => DateTime.Now);
+
+            var replayedSource = originalSource.Replay();
+
+            Console.WriteLine($"Cold stream activated at {DateTime.Now}");
+            replayedSource.Connect();
+
+            Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
+            this.Subscribe(replayedSource, "#1");
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
+            this.Subscribe(replayedSource, "#2");
+        }
+
+        public async void Replay_CallingConnectAfterTheFirstSubscribtion()
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer.Start();
+
+            var originalSource = Observable
+                .FromEventPattern(timer, nameof(timer.Tick))
+                .Select(e => DateTime.Now);
+
+            var replayedSource = originalSource.Replay();
+
+            Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
+            this.Subscribe(replayedSource, "#1");
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            Console.WriteLine($"Cold stream activated at {DateTime.Now}");
+            replayedSource.Connect();
+
+            Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
+            this.Subscribe(replayedSource, "#2");
         }
     }
 }

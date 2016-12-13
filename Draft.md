@@ -1143,6 +1143,162 @@ It's worth mentioning that this example is the worst case scenario. If your even
 
 ### Hot and Cold observables
 
+Even though so far I didn't talk about it explicitly, you might have realised that one of the main characteristic of observables is that they are only getting activated when you subscribe to them (and this is something that you should pay attention to if/when you design a custom observable).
+
+There are real-time data sources, like most (if not all) of the .NET events (`PointerMoved`, `Click`, `KeyDown`, etc.), data sources that you can observe, but can't really control when they emit new events, and they've likely been virtually active before you subscribed to the stream.
+
+And there are data sources, like an asynchronous method call, that you can still treat as an Rx stream, but you know that the service call will be triggered by your subscription to the (`FromAsync()`) observable stream. You know that any kind of event will only appear in the stream after you subscribed to it, because the subscribtion triggered the execution of the underlying logic that puts events in the stream.
+
+The aforementioned real-time data sources are called "Hot Observables", and the other group is called "Cold Observables". You can convert easily switch them around by introducing caching for a hot observable, or "broadcasting" the events from the source of a cold observable to all of its subscribers.
+
+#### Creating hot observables
+
+To turn a cold observable into a hot one, you will have to use the combination of the `Publish()` and the `Connect()` methods. The `Publish()` will prepare you an observable object that wraps your original observable stream and broadcasts its values to all the subscribers. And in this case instead of the `Subscribe()` call, calling the `Connect()` method will activate the stream and trigger the subscribtion chain in the wrapped observable, and with that the execution/activation of the underlying data source that will put events into the stream.
+
+To demonstrate this let's create a simple cold observable using the `Interval()` operator. It will generate a new stream for each of its subscribers instead of sharing the same one. You can easily see it in action with the following little sample:
+
+```csharp
+var source = Observable.Interval(TimeSpan.FromSeconds(1));
+
+// Subscribe with the 1st observer
+this.Subscribe(source, "#1");
+
+// Wait 3 seconds
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+// Subscribe with the 2nd observer
+this.Subscribe(source, "#2");
+```
+
+If you run this, you will see events popping up on your screen from the two subscribtions like this:
+
+![](Marble%20Diagrams/ColdObservableSample.png)
+
+Now it's time to turn this cold observable into a hot one by using the combination of the `Publish()` and `Connect()` methods.
+
+```csharp
+var originalSource = Observable.Interval(TimeSpan.FromSeconds(1));
+var publishedSource = originalSource.Publish();
+
+// Call Connect to activate the source and subscribe immediately with the 1st observer
+publishedSource.Connect();
+this.Subscribe(publishedSource, "#1");
+
+// Wait 3 seconds
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+// Subscribe with the 2nd observer
+this.Subscribe(publishedSource, "#2");
+```
+
+The code above shows you how to publish a stream and turn it into a hot observable. As you can see you are subscribing to the `publishedSource` and because you imeediately call `Connect()` and subscribe with the 1st observable, it will immediately start producing new values. And you can also see that this is a hot observable because after waiting 3 seconds and subscribing the 2nd observable, it will only receive values that have been emitted from the source after the subscribtion, meaning it will never see the origin of the source.
+
+![](Marble%20Diagrams/PublishSample1.png)
+
+And last but not least, try to put the `Connect()` call after the 3 second delay to demonstrate that a source is activated by the `Connect()` call and not the `Subscribe()` as it is the case for regular type of observables. Even though you immediately subscribe to the `publishedSource` with the 1st observer, it only gets activated 3 seconds later when you call the `Connect()` and subscribe with the 2nd observer. In this case both observers will see the exact same events.
+
+```csharp
+var originalSource = Observable.Interval(TimeSpan.FromSeconds(1));
+var publishedSource = originalSource.Publish();
+
+// Subscribe to the not-yet-activated source stream with the 1st observer
+this.Subscribe(publishedSource, "#1");
+
+// Wait 3 seconds
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+// Call Connect to activate the source and subscribe with the 2nd observer
+publishedSource.Connect();
+this.Subscribe(publishedSource, "#2");
+```
+
+The marble diagram for this case looks something like this:
+
+![](Marble%20Diagrams/PublishSample2.png)
+
+#### Creating cold observables
+
+The logic behind "cooling down" an observable is similar to the logic discussed about hot observables, but obviously it will go the other way around. In this case you will have to use the combination of `Replay()` and `Connect()` methods. The `Replay()` method will wrap the original (hot) observable into a caching stream, but it will only start recording and emitting the values after the `Connect()` method has been called.
+
+As a demonstration let's just create a hot observable and make 2 subscribtins to it to prove that it's hot.
+
+```csharp
+var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+timer.Start();
+
+var source = Observable
+    .FromEventPattern(timer, nameof(timer.Tick))
+    .Select(e => DateTime.Now);
+
+Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
+this.Subscribe(source, "#1");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
+this.Subscribe(source, "#2");
+```
+
+After running this example, you can clearly see that you only recieve events with dates after the date of the subscribtion.
+
+![](Marble%20Diagrams/HotObservableSample.png)
+
+Now, just like in the previous example, let's try to "cool it down" by using the `Replay()` and `Connect()` methods. In the first example call the `Connect()` immediately, meaning this cold observable will start caching the events of the underlying hot observable immediately, and every time someone subscribes to this cold observable, they will receiv the whole history of events since the activation of the stream.
+
+```csharp
+var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+timer.Start();
+
+var originalSource = Observable
+    .FromEventPattern(timer, nameof(timer.Tick))
+    .Select(e => DateTime.Now);
+
+var replayedSource = originalSource.Replay();
+
+Console.WriteLine($"Cold stream activated at {DateTime.Now}");
+replayedSource.Connect();
+
+Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
+this.Subscribe(replayedSource, "#1");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
+this.Subscribe(replayedSource, "#2");
+```
+
+The event timelines will look something like this:
+
+![](Marble%20Diagrams/ReplaySample1.png)
+
+And just to keep the tradition, check what happens if you call `Connect()` after the 3 second delay.
+
+```csharp
+var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+timer.Start();
+
+var originalSource = Observable
+    .FromEventPattern(timer, nameof(timer.Tick))
+    .Select(e => DateTime.Now);
+
+var replayedSource = originalSource.Replay();
+
+Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
+this.Subscribe(replayedSource, "#1");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+Console.WriteLine($"Cold stream activated at {DateTime.Now}");
+replayedSource.Connect();
+
+Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
+this.Subscribe(replayedSource, "#2");
+```
+
+Events will only get recorded (and emitted) after the activation of the cold observable.
+
+![](Marble%20Diagrams/ReplaySample2.png)
+
 ### Subjects
 
 #### Subject

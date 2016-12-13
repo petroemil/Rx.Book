@@ -885,5 +885,99 @@ namespace TimelineGenerator
             this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 100, 2, 100);
             this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 200, 3, 200);
         }
+
+        public async Task ColdObservableSample()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 400, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 300, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "0");
+            this.timelineDrawer.AddEventToTimeLine(1, 700, "1");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "2");
+        }
+
+        public async Task PublishSample1()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 400, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 300, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(1, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "4");
+        }
+
+        public async Task PublishSample2()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 400, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "2");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "0");
+            this.timelineDrawer.AddEventToTimeLine(1, 700, "1");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "2");
+        }
+
+        public async Task HotObservableSample()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 400, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 300, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(1, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "4");
+        }
+
+        public async Task ReplaySample1()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 400, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 300, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 400, "0");
+            this.timelineDrawer.AddEventToTimeLine(1, 475, "1");
+            this.timelineDrawer.AddEventToTimeLine(1, 550, "2");
+            this.timelineDrawer.AddEventToTimeLine(1, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "4");
+        }
+
+        public async Task ReplaySample2()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 400, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "2");
+            this.timelineDrawer.AddEventToTimeLine(1, 700, "3");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "4");
+        }
     }
 }
