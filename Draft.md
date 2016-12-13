@@ -894,12 +894,15 @@ The patter that you should follow for the rest of the examples is the following:
 // Code Sample 3-4
 // Subscribtion example
 
-source
-    .ObserveOnDispatcher()
-    .Subscribe(
-        next => Console.WriteLine($"OnNext: {next}"),
-        error => Console.WriteLine($"OnError: {error.Message}"),
-        () => Console.WriteLine("OnCompleted"));
+private void Subscribe<T>(IObservable<T> source, string subscribtionName)
+{
+    source
+        .ObserveOnDispatcher()
+        .Subscribe(
+            next => Console.WriteLine($"[{subscribtionName}] [OnNext]: {next}"),
+            error => Console.WriteLine($"[{subscribtionName}] [OnError]: {error.Message}"),
+            () => Console.WriteLine($"[{subscribtionName}] [OnCompleted]"));
+}
 ```
 
 The `ObserveOnDispatcher()` is required to make sure no matter which thred the stream is coming from, it's definitely marshalled to the UI thread.
@@ -1301,13 +1304,23 @@ Events will only get recorded (and emitted) after the activation of the cold obs
 
 ### Subjects
 
+Subjects are special kind of types that implements both the `IObservable` and `IObserver` interfaces. They will usually sit somewhere in the middle of the stream. Or you can use them as a source that you can use as an entry point to the stream, and you can manually call the `OnNext()`, `OnError()` and `OnCompleted()` methods on it. In some samples later you will see this kind of usage.
+
 #### Subject
+
+The `Subject` class is kind of an alternative to the `Publish()` + `Connect()` method pair. Basically once you subscribe it to some observable, it will turn it into a hot observable, maintaining only 1 connection to the original source and broadcasting everything that comes through to its own subscribers.
 
 #### ReplaySubject
 
+The `ReplaySubject` class - similarly to the `Subject` - is sort of an alternative to the `Replay()` + `Connect()` method pair. Once you subscribe it to an observable stream, it will remember everything that flows through it, and will "replay" all the events for each of its new subscribers.
+
 #### BehaviorSubject
 
+The `BehaviorSubject` is very similar to the regular `Subject`, so it's a hot observable, but it does an extra trick by also replaying the last element before the occurance of a subscribtion. To make sure it can always provide a "last element" immediately on subscribtion, you have to provide a default value to it, so even if technically there was no event flowing through it, it can still provide this default value on subscribtion.
+
 #### AsyncSubject
+
+`AsyncSubject` caches the last element that flows through it and publishes it once it's source observable is terminated. Any future subscribtions to the subject will receive the same cached value. It's like keeping a reference to an asynchronous operation's `Task` object.
 
 ## LINQ
 
