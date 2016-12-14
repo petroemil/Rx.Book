@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace RxSamples
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            this.Replay_CallingConnectBeforeTheTwoSubscribtions();
+            
         }
 
         private void TextBlockUsageSample()
@@ -301,6 +302,66 @@ namespace RxSamples
 
             Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
             this.Subscribe(replayedSource, "Replay - #2");
+        }
+
+        public async void Subject_TurnsAnythingToHot()
+        {
+            // Create the source (cold) observable
+            var interval = Observable.Interval(TimeSpan.FromSeconds(1));
+
+            var subject = new Subject<long>();
+
+            // Subscribe the subject to the source observable
+            // With this you activate the source observable
+            interval.Subscribe(subject); 
+
+            this.Subscribe(subject, "Subject #1");
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            this.Subscribe(subject, "Subject #2");
+        }
+
+        public void Subject()
+        {
+            var subject = new Subject<string>();
+            subject.OnNext("1");
+            this.Subscribe(subject, "Subject");
+            subject.OnNext("2");
+            subject.OnNext("3");
+            subject.OnCompleted();
+            subject.OnNext("4");
+        }
+
+        public void ReplaySubject()
+        {
+            var replaySubject = new ReplaySubject<string>();
+            replaySubject.OnNext("1");
+            this.Subscribe(replaySubject, "ReplaySubject #1");
+            replaySubject.OnNext("2");
+            this.Subscribe(replaySubject, "ReplaySubject #2");
+            replaySubject.OnNext("3");
+        }
+
+        public void BehaviorSubject()
+        {
+            var behaviorSubject = new BehaviorSubject<string>("0");
+            this.Subscribe(behaviorSubject, "BehaviorSubject #1");
+            behaviorSubject.OnNext("1");
+            behaviorSubject.OnNext("2");
+            this.Subscribe(behaviorSubject, "BehaviorSubject #2");
+            behaviorSubject.OnNext("3");
+            behaviorSubject.OnCompleted();
+            this.Subscribe(behaviorSubject, "BehaviorSubject #3");
+        }
+
+        public void AsyncSubject()
+        {
+            var asyncSubject = new AsyncSubject<string>();
+            asyncSubject.OnNext("1");
+            this.Subscribe(asyncSubject, "AsyncSubject #1");
+            asyncSubject.OnNext("2");
+            asyncSubject.OnNext("3");
+            asyncSubject.OnCompleted();
+            this.Subscribe(asyncSubject, "AsyncSubject #2");
         }
     }
 }

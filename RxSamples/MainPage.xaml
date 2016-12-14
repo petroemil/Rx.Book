@@ -8,6 +8,6 @@
     mc:Ignorable="d">
 
     <Grid Background="Black">
-        <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" />
+        <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" IsTextSelectionEnabled="True" />
     </Grid>
 </Page>

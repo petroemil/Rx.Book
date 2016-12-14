@@ -849,7 +849,7 @@ public static class TextBlockExtensions
 // UWP Console app UI
 
 <Grid Background="Black">
-    <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" />
+    <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" IsTextSelectionEnabled="True" />
 </Grid>
 ```
 
@@ -1310,17 +1310,87 @@ Subjects are special kind of types that implements both the `IObservable` and `I
 
 The `Subject` class is kind of an alternative to the `Publish()` + `Connect()` method pair. Basically once you subscribe it to some observable, it will turn it into a hot observable, maintaining only 1 connection to the original source and broadcasting everything that comes through to its own subscribers.
 
+```csharp
+// Create the source (cold) observable
+var interval = Observable.Interval(TimeSpan.FromSeconds(1));
+
+var subject = new Subject<long>();
+
+// Subscribe the subject to the source observable
+// With this you activate the source observable
+interval.Subscribe(subject);
+
+this.Subscribe(subject, "Subject #1");
+await Task.Delay(TimeSpan.FromSeconds(3));
+this.Subscribe(subject, "Subject #2");
+```
+
+As mentioned above, you can also use subjects as sources to manually push events into the stream by calling the `OnNext()`, `OnCompleted()` or `OnError()` methods.
+
+```csharp
+var subject = new Subject<string>();
+subject.OnNext("1");
+this.Subscribe(subject, "Subject");
+subject.OnNext("2");
+subject.OnNext("3");
+subject.OnCompleted();
+subject.OnNext("4");
+```
+
+In this example you will recieve the events "2" and "3". You won't recieve "1" because it happened before the subscribtion, and remember, `Subject` is a hot observable, and you also won't recieve "4" because it happened after the `OnCompleted` event, which is a terminating event and implicitly disposes the whole stream (or more precisely the connections between the pieces of the stream).
+
 #### ReplaySubject
 
-The `ReplaySubject` class - similarly to the `Subject` - is sort of an alternative to the `Replay()` + `Connect()` method pair. Once you subscribe it to an observable stream, it will remember everything that flows through it, and will "replay" all the events for each of its new subscribers.
+The `ReplaySubject` class is sort of an alternative to the `Replay()` + `Connect()` method pair. Once you subscribe it to an observable stream, it will remember everything that flows through it, and will "replay" all the events for each of its new subscribers.
+
+```csharp
+var replaySubject = new ReplaySubject<string>();
+replaySubject.OnNext("1");
+this.Subscribe(replaySubject, "ReplaySubject #1");
+replaySubject.OnNext("2");
+this.Subscribe(replaySubject, "ReplaySubject #2");
+replaySubject.OnNext("3");
+```
+
+In this example you can see that the `ReplaySubject` replays every event it flew through it to each of its subscribers.
+
+The 1st subscribtion will immediately receive "1" after subscribtion, and later "2" and "3" as they appear. <br/>
+The 2nd subscribtion will immediately recieve "1" and "2" after subscribtion, and later "3" as it appears.
 
 #### BehaviorSubject
 
 The `BehaviorSubject` is very similar to the regular `Subject`, so it's a hot observable, but it does an extra trick by also replaying the last element before the occurance of a subscribtion. To make sure it can always provide a "last element" immediately on subscribtion, you have to provide a default value to it, so even if technically there was no event flowing through it, it can still provide this default value on subscribtion.
 
+```csharp
+var behaviorSubject = new BehaviorSubject<string>("0");
+this.Subscribe(behaviorSubject, "BehaviorSubject #1");
+behaviorSubject.OnNext("1");
+behaviorSubject.OnNext("2");
+this.Subscribe(behaviorSubject, "BehaviorSubject #2");
+behaviorSubject.OnNext("3");
+behaviorSubject.OnCompleted();
+this.Subscribe(behaviorSubject, "BehaviorSubject #3");
+```
+
+The 1st subscribtion will see "0", "1", "2", "3" and "OnCompleted". <br/>
+The 2nd subscribtion will see "2", "3" and "OnCompleted". <br/>
+But the 3rd subscribtion, that happened after the stream have been terminated by the `OnCompleted()` call, will only see the "OnCompleted" event but not the last event before it.
+
 #### AsyncSubject
 
-`AsyncSubject` caches the last element that flows through it and publishes it once it's source observable is terminated. Any future subscribtions to the subject will receive the same cached value. It's like keeping a reference to an asynchronous operation's `Task` object.
+`AsyncSubject` caches the last element that flows through it and publishes it once it's source observable is terminated. Any future subscribtions to the subject will receive the same cached value. It's like keeping a reference to an asynchronous operation's `Task` object. This is also the kind of behavior you can see when you `await` an `IObservable` stream, but more on that later.
+
+```csharp
+var asyncSubject = new AsyncSubject<string>();
+asyncSubject.OnNext("1");
+this.Subscribe(asyncSubject, "AsyncSubject #1");
+asyncSubject.OnNext("2");
+asyncSubject.OnNext("3");
+asyncSubject.OnCompleted();
+this.Subscribe(asyncSubject, "AsyncSubject #2");
+```
+
+The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscribtion will see the events "3" and "OnCompleted" when or after `OnCompeted()` have been called on the subject.
 
 ## LINQ
 
