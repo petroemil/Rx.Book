@@ -1390,23 +1390,17 @@ asyncSubject.OnCompleted();
 this.Subscribe(asyncSubject, "AsyncSubject #2");
 ```
 
-The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscribtion will see the events "3" and "OnCompleted" when or after `OnCompeted()` have been called on the subject.
+The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscribtion will see the events "3" and "OnCompleted" when (or after) `OnCompeted()` have been called on the subject.
 
 ## LINQ
+
+Up until this point in this chapter you were learning about the basics of observables. How to create them, convert existing event sources or use subjects to manually push events into a stream, what kind of characteristics they have, etc.
+
+The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everydays for simple tasks like doing some data transformation on the events or filter them, or more advanced tasks like error handling, combining multiple streams, etc.
 
 ### Projection
 
 #### Select
-
-#### SelectMany
-
-#### Amb
-
-![](Marble%20Diagrams/Amb.png)
-
-#### Switch
-
-![](Marble%20Diagrams/Switch.png)
 
 ### Filtering
 
@@ -1528,13 +1522,15 @@ The `AsyncSubject` only yields anything after it's been terminated, meaning no m
 
 ### Combiners
 
-#### Concat
-
-![](Marble%20Diagrams/Concat.png)
+#### SelectMany
 
 #### Merge
 
 ![](Marble%20Diagrams/Merge.png)
+
+#### Concat
+
+![](Marble%20Diagrams/Concat.png)
 
 #### Zip
 
@@ -1543,6 +1539,14 @@ The `AsyncSubject` only yields anything after it's been terminated, meaning no m
 #### CombineLatest
 
 ![](Marble%20Diagrams/CombineLatest.png)
+
+#### Amb
+
+![](Marble%20Diagrams/Amb.png)
+
+#### Switch
+
+![](Marble%20Diagrams/Switch.png)
 
 ### Windowing
 
