@@ -1670,6 +1670,32 @@ var source = Observable
 
 ![](Marble%20Diagrams/DefaultIfEmpty.png)
 
+### Conditional operators
+
+These operators can be used to test the stream for some kind of condition or against some predicate.
+
+#### SequenceEqual
+
+This is a fairly naive way to compare two streams or a stream with a traditional .NET collection. It will only return `true` if the two streams/collections has the same elements in the same order, not more, not less. So they have to match exactly.
+
+#### Contains
+
+Checks if a given event occured in the stream. It will return `true` as soon as the element-in-question appears in the stream.
+
+#### IsEmpty
+
+Checks if the stream is empty.
+
+#### All
+
+The `All()` and `Any()` operators take a predicate as their argument.
+
+The `All()` will return `true` if the predicate returns `true` for all of the events in the stream.
+
+#### Any
+
+The `Any()` will return `true` if the predicate returns `true` for any of the elements in the stream. It will return `true` as soon as an event appears where the predicate returns `true`.
+
 ### Timing
 
 #### Delay
@@ -1697,18 +1723,6 @@ var source = Observable
 #### Catch
 
 #### Finally
-
-### Compare
-
-#### SequenceEqual
-
-#### Contains
-
-#### IsEmpty
-
-#### All
-
-#### Any
 
 ### Repeaters
 
