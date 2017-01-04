@@ -1732,7 +1732,7 @@ The `Repeat()` operator is very similar to the `Retry()` with the minor differen
 
 #### DoWhile
 
-The `DoWhile()` operator is similar to the `Repeat()`, but it takes a predicate as an argument.
+The `DoWhile()` operator is similar to the `Repeat()`, but it takes a predicate as an argument and it will only keep re-subscribing to the source stream while the predicate evaluates to `true`.
 
 ### Monitoring
 
