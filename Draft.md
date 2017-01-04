@@ -1396,47 +1396,167 @@ The `AsyncSubject` only yields anything after it's been terminated, meaning no m
 
 Up until this point in this chapter you were learning about the basics of observables. How to create them, convert existing event sources or use subjects to manually push events into a stream, what kind of characteristics they have, etc.
 
-The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everydays for simple tasks like doing some data transformation on the events or filter them, or more advanced tasks like error handling, combining multiple streams, etc.
+The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everydays for simple tasks like doing some data transformation on the events, filter them, or more advanced tasks like error handling, combining multiple streams, etc.
+
+I believe the absolute top two standard LINQ operators are the `Select()` and `Where()`, so let's start with those.
 
 ### Projection
 
 #### Select
 
+You can use `Select()` to transform (or "project") the data that is travelling through the stream in each event.<br/>
+You could see an example of it when you were extracting some useful information from the `EventArgs` after converting a traditional .NET event to an Rx stream.
+
+```csharp
+var source = Observable
+    .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+    .Select(e => e.EventArgs.Key.ToString());
+```
+
 ### Filtering
 
 #### Where
+
+The ability to do basic filtering on the events is incredibly useful especially in cases when your source is quite "noisy". What if you want to detect if your users are moving their pointer (mouse/touch/stylus/gaze/whatever) over a certain part of your UI? Your naive solution would be to subscribe to the `PointerMoved` event and in the eventhandler make a big `if` statement because you only care about certain positions. Let's assume you want to divide your UI to a grid of 100x100 pixel rectangles, and you only care about the cases when the user is moving his/her pointer within the diagonal rectangles, so where the rectangle's position is like x=y.
+
+```csharp
+var source = Observable
+    .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+    .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+    .Select(p => new Point((int)(p.X / 100), (int)(p.Y / 100)))
+    .Where(p => p.X == p.Y)
+    .Select(p => $"{p.X}, {p.Y}");
+```
 
 ![](Marble%20Diagrams/Where.png)
 
 #### Distinct, DistinctUntilChanged
 
+If you try the previous code example, you will notice that it produces many events with the exact same data. 
+
+Let's modify the requirements a little bit. Keep the grid, but let's say you want to be notified each time the user enters into one of these rectangles and you don't want the remaining couple of hundred events stating "the user is in this area", "the user is still in the same area", etc.
+
+For this you can use the `DistinctUntilChanged()` operator, that will only let an event through if it's different from the previous one.
+
+```csharp
+var source = Observable
+    .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+    .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+    .Select(p => new Point((int)(p.X / 100), (int)(p.Y / 100)))
+    .DistinctUntilChanged()
+    .Select(p => $"{p.X}, {p.Y}");
+```
+
 ![](Marble%20Diagrams/DistinctUntilChanged.png)
+
+There is a stronger version of this operator that you would tipically use in a more traditional data query, the `Distinct()`, which guarantees that a given value can only occur once in the lifetime of the stream and every other occurances will be filtered out.
 
 #### Skip
 
+While the `Where()` operator works on the whole stream, checks each element against a predicate and decides whether to keep it or not, but it's possible that you might just want to skip elements at the beginning or end of the stream. And this is exactly what you can do with the different variations of the `Skip()` operator.
+
+The most simple version let's you specify the number of elements or the duration of time you want to skip at the beginning (with the `Skip()`) or end (with the `SkipLast()`) of the stream.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Skip(5);
+```
+
 ![](Marble%20Diagrams/Skip.png)
+
+It's worth mentioning that by it's nature the `SkipLast()` will only produce elements after it's source stream has completed. It makes sense, you can only tell which elements were the last 3 (for example) after the source has terminated.
+
+```csharp
+var source = Observable
+    .Range(0, 5)
+    .SkipLast(3);
+```
 
 ![](Marble%20Diagrams/SkipLast.png)
 
+While with the `Skip()` operator you can specify a timespan, a duration of time you would like to skip, it's also possible to specify an absolute time (in the future) saying you are not interested in any event until that specific time in the future.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .SkipUntil(DateTime.Now + TimeSpan.FromSeconds(5));
+```
+
 ![](Marble%20Diagrams/SkipUntil.png)
+
+And last but not least it's also possible to provide a predicate saying you want to skip every element until the predicate is true. After the first time the predicate evaluates to false, it will start letting events throguh and won't evaluate the predicate any more (otherwise it would be equivalent to the `Where()` operator).
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .SkipWhile(num => num % 2 == 0);
+```
 
 ![](Marble%20Diagrams/SkipWhile.png)
 
 #### Take
 
+The `Take()` operator is the opposite of `Skip()`.
+
+You can say you want to *take* the first *n* elements or the first *n* second of the stream.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Take(5);
+```
+
 ![](Marble%20Diagrams/Take.png)
+
+Or you can say the same about the last *n* elements or *n* seconds.
+
+```csharp
+var source = Observable
+    .Range(0, 5)
+    .TakeLast(3);
+```
 
 ![](Marble%20Diagrams/TakeLast.png)
 
+It also has the version to specify an absolute time in the future, saying you want everything until that point and nothing after.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .TakeUntil(DateTime.Now + TimeSpan.FromSeconds(5));
+```
+
 ![](Marble%20Diagrams/TakeUntil.png)
+
+And it also works with a predicate, saying you want everything while the predicate evaluates to true and nothing after.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .TakeWhile(num => num % 2 == 0);
+```
 
 ![](Marble%20Diagrams/TakeWhile.png)
 
+Just like any other two operators, you can combine the `Skip()` and `Take()` operators if that's what your business logic requires.
+
+In the sample below you can see a stream producing a new event every second.<br/>
+First you say you want to skip 3 elements, so it will skip 0, 1 and 2,<br/>
+and after that you say you want to take 4 elements, so it will take 3, 4, 5 and 6 and after the 4th element, it will terminate the stream.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Skip(3)
+    .Take(4);
+```
+
 ![](Marble%20Diagrams/SkipAndTake.png)
 
-#### Sample
-
 ### Selectors
+
+In this section you will see some of the operators that you can use to reduce a whole stream to a single element.
 
 #### First
 
@@ -1454,6 +1574,12 @@ The more interesting part though are the operators, all the things that you can 
 
 ![](Marble%20Diagrams/Single.png)
 
+### Maths
+
+![](Marble%20Diagrams/Max.png)
+
+### Default values
+
 #### DefaultIfEmpty
 
 ![](Marble%20Diagrams/DefaultIfEmpty.png)
@@ -1461,10 +1587,6 @@ The more interesting part though are the operators, all the things that you can 
 #### StartWith
 
 ![](Marble%20Diagrams/StartWith.png)
-
-### Maths
-
-![](Marble%20Diagrams/Max.png)
 
 ### Timing
 
@@ -1475,6 +1597,8 @@ The more interesting part though are the operators, all the things that you can 
 #### Throttle
 
 ![](Marble%20Diagrams/Throttle.png)
+
+#### Sample
 
 ### Error handling
 

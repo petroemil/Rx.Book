@@ -2,8 +2,8 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
-using System.Threading;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -155,7 +155,7 @@ namespace RxSamples
 
             this.Subscribe(badExample, "FromAsync");
         }
-        
+
         private void FromEventPattern()
         {
             var source = Observable.FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown));
@@ -168,7 +168,7 @@ namespace RxSamples
         {
             var source = Observable.FromEvent<Action<string, int, double>, Tuple<string, int, double>>(
                 rxOnNext => (s, i, d) => rxOnNext(Tuple.Create(s, i, d)),
-                eventHandler => MySpecialEvent += eventHandler, 
+                eventHandler => MySpecialEvent += eventHandler,
                 eventHandler => MySpecialEvent -= eventHandler);
 
             this.Subscribe(source, "FromEvent");
@@ -313,7 +313,7 @@ namespace RxSamples
 
             // Subscribe the subject to the source observable
             // With this you activate the source observable
-            interval.Subscribe(subject); 
+            interval.Subscribe(subject);
 
             this.Subscribe(subject, "Subject #1");
             await Task.Delay(TimeSpan.FromSeconds(3));
@@ -362,6 +362,121 @@ namespace RxSamples
             asyncSubject.OnNext("3");
             asyncSubject.OnCompleted();
             this.Subscribe(asyncSubject, "AsyncSubject #2");
+        }
+
+        public void Select()
+        {
+            var source = Observable
+                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .Select(e => e.EventArgs.Key.ToString());
+
+            this.Subscribe(source, "Select");
+        }
+
+        public void Where()
+        {
+            var source = Observable
+                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .Select(p => new Point((int)(p.X / 100), (int)(p.Y / 100)))
+                .Where(p => p.X == p.Y)
+                .Select(p => $"{p.X}, {p.Y}");
+
+            this.Subscribe(source, "Where");
+        }
+
+        public void DistinctUntilChanged()
+        {
+            var source = Observable
+                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .Select(p => new Point((int)(p.X / 100), (int)(p.Y / 100)))
+                .DistinctUntilChanged()
+                .Select(p => $"{p.X}, {p.Y}");
+
+            this.Subscribe(source, "DistinctUntilChanged");
+        }
+
+        public void Skip()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Skip(5);
+
+            this.Subscribe(source, "Skip");
+        }
+
+        public void SkipLast()
+        {
+            var source = Observable
+                .Range(0, 5)
+                .SkipLast(3);
+
+            this.Subscribe(source, "SkipLast");
+        }
+
+        public void SkipUntil()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .SkipUntil(DateTime.Now + TimeSpan.FromSeconds(5));
+
+            this.Subscribe(source, "SkipUntil");
+        }
+
+        public void SkipWhile()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .SkipWhile(num => num % 2 == 0);
+
+            this.Subscribe(source, "SkipWhile");
+        }
+
+        public void Take()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Take(5);
+
+            this.Subscribe(source, "Take");
+        }
+
+        public void TakeLast()
+        {
+            var source = Observable
+                .Range(0, 5)
+                .TakeLast(3);
+
+            this.Subscribe(source, "TakeLast");
+        }
+
+        public void TakeUntil()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .TakeUntil(DateTime.Now + TimeSpan.FromSeconds(5));
+
+            this.Subscribe(source, "TakeUntil");
+        }
+
+        public void TakeWhile()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .TakeWhile(num => num % 2 == 0);
+
+            this.Subscribe(source, "TakeWhile");
+        }
+
+        public void SkipAndTake()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Skip(3)
+                .Take(4);
+
+            this.Subscribe(source, "Skip and Take");
         }
     }
 }
