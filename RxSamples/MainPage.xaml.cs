@@ -478,5 +478,50 @@ namespace RxSamples
 
             this.Subscribe(source, "Skip and Take");
         }
+
+        public void First()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .FirstAsync();
+
+            this.Subscribe(source, "First");
+        }
+
+        public void Last()
+        {
+            var source = Observable
+                .Range(0, 4)
+                .LastAsync();
+
+            this.Subscribe(source, "Last");
+        }
+
+        public void ElementAt()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .ElementAt(2);
+
+            this.Subscribe(source, "ElementAt");
+        }
+
+        public void Single()
+        {
+            var source = Observable
+                .Return(42)
+                .SingleAsync();
+
+            this.Subscribe(source, "Single");
+        }
+
+        public void Max()
+        {
+            var source = Observable
+                .Range(0, 5)
+                .Max();
+
+            this.Subscribe(source, "Max");
+        }
     }
 }

@@ -1558,23 +1558,85 @@ var source = Observable
 
 In this section you will see some of the operators that you can use to reduce a whole stream to a single element.
 
+All of these operators have 2x2 versions.
+
+The normal version requires the operator to successfully execute, otherwise it throws an exception (produces an OnError event). So the `First()` or `Last()` operators will fail if there is no element in the stream, the `ElementAt()` will fail if the specified index doesn't exist before the stream is terminated and the `Single()` will fail if there is either more or less element in the stream than one.
+
+There is a more tolerant version version for these operators which adds an `OrDefault` ending to their name. It means if it would normally fail, it will rather return the `default` value for the given tpye (`null` for reference types, `0` for `int`, `false` for `bool`, etc.).
+
+These operators also support an additional overload where you can specify a predicate. For example in case of the `First()` operator it would mean that it wouldn't just blindly return the very first element in the source stream, but it would wait for the first element that evaluates the provided predicate to `true`.
+
+It also worth mentioning that technically you will see 4 version for each of the operators:
+* Operator
+* OperatorAsync
+* OperatorOrDefault
+* OperatorOrDefaultAsync
+
+... but you should NOT use the non-async versions as they are marked obsolete. The problem with them is that they wait for the given element to appear in the stream synchronously, blocking the execution thread, and that would be quite counterproductive considering Rx is a library thats purpose is to make asynchronous programming easier. 
+
 #### First
+
+So the `FirstAsync()` operator, as its name suggests, will return the very first element in the stream right after it appears.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .FirstAsync();
+```
 
 ![](Marble%20Diagrams/First.png)
 
 #### Last
 
+The `LastAsync()` operator will have to wait for the source stream to terminate and then it can return the last element before the termination.
+
+```csharp
+var source = Observable
+    .Range(0, 4)
+    .LastAsync();
+```
+
 ![](Marble%20Diagrams/Last.png)
 
 #### ElementAt
+
+The `ElementAt()` operator will keep track of the index of the events and once the stream grows big enough to reach the specified index, it returns with that event.
+
+Pay attention to the subtle detail that compared to `FirstAsync()` and `LastAsync()`, the `ElementAt()` doesn't have the "Async" ending in its name (just to confuse things a little).
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .ElementAt(2);
+```
 
 ![](Marble%20Diagrams/ElementAt.png)
 
 #### Single
 
+The `SingleAsync()` operator (yes, it has the "Async" ending) is kind of a condition check instead of selection logic. It only returns successfully if there is exactly one element in the stream, no more, no less.
+
+It worth mentioning that the `SingleOrDefaultAsync()` operator will fail if there are more than one elements in the stream, it only "protects" against the case when there is no element in the stream.
+
+```csharp
+var source = Observable
+    .Return(42)
+    .SingleAsync();
+```
+
 ![](Marble%20Diagrams/Single.png)
 
 ### Maths
+
+Maths operators cover a really specific area: doing some basic kind of range operations on numerical streams. All of these operators will produce one element right after the source stream has terminated.
+
+There are `Max()`, `Min()`, `Average()`, `Sum()` and `Count()`.
+
+```csharp
+var source = Observable
+    .Range(0, 5)
+    .Max();
+```
 
 ![](Marble%20Diagrams/Max.png)
 
