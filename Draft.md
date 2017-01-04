@@ -1724,11 +1724,15 @@ The `Any()` will return `true` if the predicate returns `true` for any of the el
 
 #### Finally
 
-### Repeaters
+### Loops
 
 #### Repeat
 
+The `Repeat()` operator is very similar to the `Retry()` with the minor difference that it re-subscribes to the underlying stream automatically once it *succesfully* finished. Just like with `Retry()` you can choose to repeat in an infinite loop or to only repeat just a given number of times.
+
 #### DoWhile
+
+The `DoWhile()` operator is similar to the `Repeat()`, but it takes a predicate as an argument.
 
 ### Monitoring
 
