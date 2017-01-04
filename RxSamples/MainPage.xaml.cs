@@ -523,5 +523,23 @@ namespace RxSamples
 
             this.Subscribe(source, "Max");
         }
+
+        public void StartWith()
+        {
+            var source = Observable
+                .Range(0, 5)
+                .StartWith(42);
+
+            this.Subscribe(source, "StartWith");
+        }
+
+        public void DefaultIfEmpty()
+        {
+            var source = Observable
+                .Empty<int>()
+                .DefaultIfEmpty(42);
+
+            this.Subscribe(source, "DefaultIfEmpty");
+        }
     }
 }
