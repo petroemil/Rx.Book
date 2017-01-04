@@ -1644,13 +1644,10 @@ var source = Observable
 
 In your application you might need to handle cases if an event source didn't produce (yet) any events. 
 
+#### StartWith
+
 There are basically two ways to "use" Rx. One of them is when you are subscribing to a stream with a long runtime and just handle the events. It's similar kind of use case to traditional .NET events. You just subscribe and the stream might never terminate. <br/>
 In this case you might have a requirement to receive an event immediately after subscribing to the stream even if the source didn't *actually* produced an event. In this scenario you can use the `StartWith()` operator to proactively inject one or more elements to the beginning of the stream that the subscriber will definitely receive right after subscribtion.
-
-The other use is when you are replacing a traditional `Task` based asynchronous operation with a fancier Rx pipeline (add timeout, retry, parallel execution of multiple tasks, etc.) and then you `await` it. <br/>
-In this case you can use the `DefaultIfEmpty()` operator which will retroactively check the stream and if the source stream terminates as an empty stream, it will fill in that void with a predefined default value (or the `default` value of the type).
-
-#### StartWith
 
 ```csharp
 var source = Observable
@@ -1661,6 +1658,9 @@ var source = Observable
 ![](Marble%20Diagrams/StartWith.png)
 
 #### DefaultIfEmpty
+
+The other use is when you are replacing a traditional `Task` based asynchronous operation with a fancier Rx pipeline (add timeout, retry, parallel execution of multiple tasks, etc.) and then you `await` it. <br/>
+In this case you can use the `DefaultIfEmpty()` operator which will retroactively check the stream and if the source stream terminates as an empty stream, it will fill in that void with a predefined default value (or the `default` value of the type).
 
 ```csharp
 var source = Observable
