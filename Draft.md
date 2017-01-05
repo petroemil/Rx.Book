@@ -1712,6 +1712,8 @@ var source = Observable
 
 There is also a way to provide some logic that will be applied to all individual elements in the original stream and calculate the delay for them. The interesting bit here is that you don't get an overload where you can provide a function that receives the actual event and returns a `TimeSpan` or `DateTime`, instead you have to return an `IObservable` that will be used as a "signaling stream": when it produces its first element, the `Delay()` operator will emmit the associated event on its output stream.
 
+In this case it's also possible that your logic will delay the event "n" to a later point in time than the event "n+1", meaning this might mess up the order of your events.
+
 There are some other operators where you can use this kind of pattern of providing an `IObservable<object>` (the actual data travelling on it doesn't matter, hence the `object`) as a "signaling stream".
 
 #### Throttle
