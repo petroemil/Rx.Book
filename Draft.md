@@ -1751,17 +1751,24 @@ It packs the whole stream, with all of it's channels into a `Notification<T>` ob
 
 Using this operator will come with some "sideeffects".
 
-* **OnNext** will work as expected
-* when recieving an **OnCompleted**, it will produce an event containing a `Notification` with `Kind` being `OnCompleted`, and then it will actually terminate the stream with a real OnCompleted event
-* and in case of **OnError**, it will produce an event containing a `Notification` with `Kind` being `OnError`, and then it will terminate the stream with an OnCompleted (not OnError) event
+* **OnNext** will work as expected<br/>
+`OnNext -> Notification(OnNext)`
+* when recieving an **OnCompleted**, it will produce an event containing a `Notification` with `Kind` being `OnCompleted`, and then it will actually terminate the stream with a real OnCompleted event <br/>
+`OnCompleted -> Notification(OnCompleted) + OnCompleted`
+* and in case of **OnError**, it will produce an event containing a `Notification` with `Kind` being `OnError`, and then it will terminate the stream with an OnCompleted (not OnError) event<br/>
+`OnError -> Notification(OnError) + OnCompleted`
+
+This operator has a corresponding `Dematerialize()` pair, to unwrap these notifications to "real" messages on the proper channels.
 
 #### Timestamp
 
-This operator attaches a `DateTimeOffset` timestamp to the events, producing a `Timestamped<T>` object that has a `Timestamp` property of type `DateTimeOffset`, and a `Value` property of type `T`.
+This operator attaches a `DateTimeOffset` timestamp to the events, producing a `Timestamped<T>` object that has a `Timestamp` property of type `DateTimeOffset`, and a `Value` property of type `T`. Unlike the `Materialize()` operator, this one does not come with some kind of "DeTimestamp" operator to unwrap this object, though you can easily write your own operator to achieve this functionality.
 
 #### TimeInterval
 
-While the `Timestamp()` operator attaches a `DateTimeOffset` to each event, the `TimeInterval()` operator attaches a `TimeSpan` to the events, representing the time difference between the current and the previous event. It produces a `TimeInterval<T>` object that has an `Interval` property of type `TimeSpan` and a `Value` property of type `T`.
+While the `Timestamp()` operator attaches a `DateTimeOffset` to each event, the `TimeInterval()` operator attaches a `TimeSpan` to the events, representing the time difference between the current and the previous event. It produces a `TimeInterval<T>` object that has an `Interval` property of type `TimeSpan` and a `Value` property of type `T`. Just like the `Timestamp()` operator, the `TimeInterval()` also lacks a "DeTimeInterval" unwrapping operator, but again, it's very easy to write one for yourself.
+
+It also worth mentioning that while you are absolutely free to use these operators in your production environment, they also serve as a great guideline for this kind of functionality and you can also build your very own metadata object that can hold even more data than these built-in ones.
 
 ### Combiners
 
