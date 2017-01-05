@@ -1738,11 +1738,30 @@ The `DoWhile()` operator is similar to the `Repeat()`, but it takes a predicate 
 
 #### Do
 
-#### Timestamp
-
-#### Timeinterval
+With the `Do()` operator you have the chance to inspect the stream at any point without modifying it. It's like writing a `Select()` logic that takes an element, doesn't do anything with it but sends some messages to a log and then returns the original element untouched. Actually, it's more than that because with the `Do()` operator you can also inspect the OnError and OnCompleted channels, which comes extremely handy as most of the time what you are really interested in is the `Exception` on the OnError channel.
 
 #### Materialize / Dematerialize
+
+With `Materialize()` you can capture all channels into a single (and by the way serialisable) object. This is great for monitoring purposes, or when you have different parts of your Rx pipeline running on different machines and somewhere in the middle of the pipeline you have to move data over the internet.
+
+It packs the whole stream, with all of it's channels into a `Notification<T>` object. It has a couple of properties, none of them should be too surprising though. 
+* a property named `Kind` of type `NotificationKind` enumeration with the possible values of `OnNext`, `OnError` and `OnCompleted`
+* a pair of properties, `HasValue` (`bool`) and `Value` (`T`)
+* and an `Exception` property of type `Exception`
+
+Using this operator will come with some "sideeffects".
+
+* **OnNext** will work as expected
+* when recieving an **OnCompleted**, it will produce an event containing a `Notification` with `Kind` being `OnCompleted`, and then it will actually terminate the stream with a real OnCompleted event
+* and in case of **OnError**, it will produce an event containing a `Notification` with `Kind` being `OnError`, and then it will terminate the stream with an OnCompleted (not OnError) event
+
+#### Timestamp
+
+This operator attaches a `DateTimeOffset` timestamp to the events, producing a `Timestamped<T>` object that has a `Timestamp` property of type `DateTimeOffset`, and a `Value` property of type `T`.
+
+#### TimeInterval
+
+While the `Timestamp()` operator attaches a `DateTimeOffset` to each event, the `TimeInterval()` operator attaches a `TimeSpan` to the events, representing the time difference between the current and the previous event. It produces a `TimeInterval<T>` object that has an `Interval` property of type `TimeSpan` and a `Value` property of type `T`.
 
 ### Combiners
 

@@ -541,5 +541,32 @@ namespace RxSamples
 
             this.Subscribe(source, "DefaultIfEmpty");
         }
+
+        public void Materialize()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Materialize();
+
+            this.Subscribe(source, "Materialize");
+        }
+
+        public void Timestamp()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Timestamp();
+
+            this.Subscribe(source, "Timestamp");
+        }
+
+        public void TimeInterval()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .TimeInterval();
+
+            this.Subscribe(source, "TimeInterval");
+        }
     }
 }
