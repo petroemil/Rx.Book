@@ -568,5 +568,34 @@ namespace RxSamples
 
             this.Subscribe(source, "TimeInterval");
         }
+
+        public void Delay()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Delay(TimeSpan.FromSeconds(2));
+
+            this.Subscribe(source, "Delay");
+        }
+
+        public void Throttle()
+        {
+            var source = Observable
+                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .Select(e => e.EventArgs.Key)
+                .Throttle(TimeSpan.FromSeconds(1));
+
+            this.Subscribe(source, "Throttle");
+        }
+
+        public void Sample()
+        {
+            var source = Observable
+                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .Sample(TimeSpan.FromMilliseconds(500));
+
+            this.Subscribe(source, "Sample");
+        }
     }
 }

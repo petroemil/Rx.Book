@@ -1700,13 +1700,55 @@ The `Any()` will return `true` if the predicate returns `true` for any of the el
 
 #### Delay
 
+The `Delay()` operator will do exactly what you would expect it to do. It takes the source stream, preserving the relative time between its events, and delays its elements by some specified amount of time. You can specify this delay by providing a `TimeSpan` or a `DateTime` value. The `TimeSpan` will of course just delay the occurence of the events in the stream with the specified amount of time, while the `DateTime` will delay all the events to appear after that absolute time (again, the relative time between the events are preserved).
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Delay(TimeSpan.FromSeconds(2));
+```
+
 ![](Marble%20Diagrams/Delay.png)
 
+There is also a way to provide some logic that will be applied to all individual elements in the original stream and calculate the delay for them. The interesting bit here is that you don't get an overload where you can provide a function that receives the actual event and returns a `TimeSpan` or `DateTime`, instead you have to return an `IObservable` that will be used as a "signaling stream": when it produces its first element, the `Delay()` operator will emmit the associated event on its output stream.
+
+There are some other operators where you can use this kind of pattern of providing an `IObservable<object>` (the actual data travelling on it doesn't matter, hence the `object`) as a "signaling stream".
+
 #### Throttle
+
+You could already read a little bit about the `Throttle()` operator in the Introduction chapter. Its purpose is to throttle the stream to not produce events too fast. You might want to build an auto-complete TextBox that is hooked to some web service to provide its suggestions, and you would probably not want to send a web request every single time the user hits a key. You want to wait a little bit for the user to calm down and stop typing, that's the moment when the user runs out of ideas to type and is waiting for some suggestion. It's also very useful little trick to reduce the network traffic and processing required to provide this little service.
+
+An other example could be some kind of mouse position tracking system, that tracks where the user is "resting" the cursor, so you only want to receive some notification if the user didn't move the mouse for like one second.
+
+The operators behavior is that it will always emmit the very last element before the "rest time" and it will just simply ignore the other events (events that were followed by an other event "too soon").
+
+The following example shows the throttling of `KeyDown` event:
+
+```csharp
+var source = Observable
+    .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+    .Select(e => e.EventArgs.Key)
+    .Throttle(TimeSpan.FromSeconds(1));
+```
 
 ![](Marble%20Diagrams/Throttle.png)
 
 #### Sample
+
+If you know how analog-to-digital conversion works for video and audio recording (or recording pretty much any signal over time to be honest), then you know what sampling is. You have some kind of event source that emmits events continously, but you don't have the capacity to process all of that, so you choose to "sample" that event every millisecond or every second or so. When you see the metadata for an audio file saying it's sample rate is 44kHz, it means that the original recording was done by recording the actual airpressure with a microphone 44.000 times a second.
+
+Or to turn back to the mouse tracking example, you might not want to just record the "resting" positions, you want more, but not MUCH more, like recording the mouse position with a 125Hz refresh rate (that is the default for USB mouses), but more like the actual position in every 500 or so.
+
+Similarly to the `Throttle()` operator, the `Sample()` operator only captures the preceeding event before the sampling and ignores the rest that occures between.
+
+```csharp
+var source = Observable
+    .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+    .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+    .Sample(TimeSpan.FromMilliseconds(500));
+```
+
+As with the `Delay()` operator, you can also provide an other `IObservable<object>` as a "signaling stream", meaning whenever the signaling stream emmits an event, it takes a sample from the original event source. Again the actual data flowing on this signaling stream doesn't matter, hence the `object` generic type parameter.
 
 ### Error handling
 
