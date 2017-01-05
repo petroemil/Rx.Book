@@ -1758,17 +1758,85 @@ As with the `Delay()` operator, you can also provide an other `IObservable<objec
 
 #### Timeout
 
+With the `Timeout()` operator you can force the stream to fail if something doesn't happen within a specified time.
+
+You can give it a `TimeSpan` as an argument, which means events must occur quicker in the stream than the specified amount of time. If the first event doesn't appear in the stream within that time, or if there is more time between any two consecutive events, the stream will fail.
+
+You can also specify a `DateTime`, in which case the original stream has to terminate (successfully, with an OnCompleted event) before the specified date.
+
+```csharp
+var source = Observable
+    .Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1))
+    .Timeout(TimeSpan.FromSeconds(3));
+```
+
 ![](Marble%20Diagrams/Timeout.png)
+
+As with a couple of other operators previously, it's possible to provide a function that will have to return an `IObservable<object>` meaning the next element has to appear in the original stream before that generated `IObservable<object>` stream yields an event.
 
 #### Retry
 
+The `Retry()` operator is really simple. If the source stream fails (produces an OnError event), it will resubscribe infinite or a given amount of times.
+
+Let's assum you have some failing service call (`RandomlyFailingService()` in the example) that you would like retry 3 times before completely giving up. It would look something liek this:
+
+```csharp
+var source = Observable
+    .FromAsync(() => this.RandomlyFailingService())
+    .Retry(3);
+```
+
+Extremely important piece of detail is that you should never ever convert a `Task`-returning async call to an Rx stream by calling the `ToObservable()` extension method on it. The reason is, if you properly build a stream using the `FromAsync()` method, it will re-evaluate that little function every time you subscribe to it, re-executing the actual async call. If you call `ToObservable()` on a `Task` it will just have a reference to that `Task` object but if it fails it won't be able to re-execute the operation that returned that `Task`. No matter how many times you (or the `Retry()` operator internally) subscribe to this stream, you will always get the same result or error that the original `Task` holds.
+
 #### OnErrorResumeNext
+
+With the `OnErrorResumeNext()` operator you can silently swallow an error and seamlessly redirect the subscribtion to an other stream. Could be a good example for this to try to download something from multiple mirrors. If one fails, try the next one.
+
+To demonstrate this you can set up two observables (of the same type) and then connect them with this operator.
+
+```csharp
+var source1 = Observable.Create<int>(observer => () =>
+{
+    observer.OnNext(0);
+    observer.OnNext(1);
+    observer.OnError(new Exception(""));
+});
+
+var source2 = Observable.Create<int>(observer => () =>
+{
+    observer.OnNext(11);
+    observer.OnNext(12);
+    observer.OnNext(13);
+});
+
+var source = source1.OnErrorResumeNext(source2);
+```
 
 ![](Marble%20Diagrams/OnErrorResumeNext.png)
 
 #### Catch
 
+The `Catch()` can operator can work in the exact same way as the `OnErrorResumeNext()`, but it can also be used to do more precise exception handling, building up multiple catch cases similarly as you would do it in a traditional `try-catch` expression. You can handle specific types of exceptions and provide the continuation stream based on the exception details.
+
+```csharp
+var source1 = Observable.Throw<int>(new KeyNotFoundException("Problem"));
+var source2 = Observable.Return(42);
+var source3 = Observable.Return(0);
+
+var source = source1
+    .Catch((KeyNotFoundException ex) => source2)
+    .Catch((Exception ex) => source3);
+```
+
 #### Finally
+
+This operator gives you the ability to do things after the source stream terminates (whether it's an OnComplete or an OnError termination). It won't alter the stream, just appends one last step before it finishes. It takes a simple `Action` as the parameter, unlike with the `Do()` operator, you don't get to see the content of the stream.
+
+```csharp
+var source = Observable
+    .Return(42)
+    .Finally(() => { /* ... */ });
+```
 
 ### Loops
 

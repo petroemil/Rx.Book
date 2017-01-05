@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
@@ -596,6 +597,71 @@ namespace RxSamples
                 .Sample(TimeSpan.FromMilliseconds(500));
 
             this.Subscribe(source, "Sample");
+        }
+
+        public void Timeout()
+        {
+            var source = Observable
+                .Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1))
+                .Timeout(TimeSpan.FromSeconds(3));
+
+            this.Subscribe(source, "Timeout");
+        }
+
+        private async Task<int> RandomlyFailingService()
+        {
+            if (new Random().NextDouble() < 0.75)
+                throw new Exception("Service Failed");
+
+            return 42;
+        }
+
+        public void Retry()
+        {
+            var source = Observable
+                .FromAsync(() => this.RandomlyFailingService())
+                .Retry(3);
+
+            this.Subscribe(source, "Retry");
+        }
+
+        public void OnErrorResumeNext()
+        {
+            var source1 = Observable.Create<int>(observer => () =>
+            {
+                observer.OnNext(0);
+                observer.OnNext(1);
+                observer.OnError(new Exception(""));
+            });
+
+            var source2 = Observable.Create<int>(observer => () =>
+            {
+                observer.OnNext(11);
+                observer.OnNext(12);
+                observer.OnNext(13);
+            });
+
+            var source = source1.OnErrorResumeNext(source2);
+
+            this.Subscribe(source, "OnErrorResumeNext");
+        }
+
+        public void Catch()
+        {
+            var source1 = Observable.Throw<int>(new KeyNotFoundException("Problem"));
+            var source2 = Observable.Return(42);
+            var source3 = Observable.Return(0);
+
+            var source = source1
+                .Catch((KeyNotFoundException ex) => source2)
+                .Catch((Exception ex) => source3);
+        }
+
+        public void Finally()
+        {
+            var source = Observable
+                .Return(42)
+                .Finally(() => { /* ... */ });
         }
     }
 }
