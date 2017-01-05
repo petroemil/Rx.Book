@@ -913,7 +913,7 @@ Even though you now have this console application, you will also have a more vis
 
 They will look something like this:
 
-![](Marble%20Diagrams/Sample.png)
+![](Marble%20Diagrams/Example.png)
 
 ### Generator operators
 
@@ -1747,6 +1747,8 @@ var source = Observable
     .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
     .Sample(TimeSpan.FromMilliseconds(500));
 ```
+
+![](Marble%20Diagrams/Sample.png)
 
 As with the `Delay()` operator, you can also provide an other `IObservable<object>` as a "signaling stream", meaning whenever the signaling stream emmits an event, it takes a sample from the original event source. Again the actual data flowing on this signaling stream doesn't matter, hence the `object` generic type parameter.
 

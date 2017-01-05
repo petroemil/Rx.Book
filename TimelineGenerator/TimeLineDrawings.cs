@@ -35,7 +35,7 @@ namespace TimelineGenerator
             }
         }
 
-        public async Task Sample()
+        public async Task Example()
         {
             this.timelineDrawer.DrawTimeLine(1);
             this.timelineDrawer.AddEventToTimeLine(0, 100, "A");
@@ -978,6 +978,26 @@ namespace TimelineGenerator
             this.timelineDrawer.AddEventToTimeLine(1, 500, "2");
             this.timelineDrawer.AddEventToTimeLine(1, 700, "3");
             this.timelineDrawer.AddEventToTimeLine(1, 900, "4");
+        }
+
+        public async Task Sample()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 0, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "A");
+            this.timelineDrawer.AddEventToTimeLine(0, 200, "B");
+            this.timelineDrawer.AddEventToTimeLine(0, 400, "C");
+            this.timelineDrawer.AddEventToTimeLine(0, 700, "D");
+            this.timelineDrawer.AddEventToTimeLine(0, 900, "E");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 300, "B");
+            this.timelineDrawer.AddEventToTimeLine(1, 600, "C");
+            this.timelineDrawer.AddEventToTimeLine(1, 900, "E");
+
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 300, 1, 300);
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 600, 1, 600);
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 900, 1, 900);
         }
     }
 }
