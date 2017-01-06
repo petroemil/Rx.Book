@@ -1886,29 +1886,133 @@ It also worth mentioning that while you are absolutely free to use these operato
 
 ### Combiners
 
-#### SelectMany
+#### SelectMany, Merge and Concat
 
-#### Merge
+These operators are really similar, it's just a matter of configuration that differentiates them.
+
+##### SelectMany
+
+The `SelectMany()` operator might sound familiar from the traditional LINQ world. Somehow you end up having a collection of collections and you want to flatten this two dimensional hierarchy to just one dimension by appending each sub-collection after each other.
+
+The difference in the Rx world compared to the LINQ world is that things are happening asynchronously and in parallel, so what you will get on the resulting stream is a mix of all the sub-streams that you generated (or retrieved) from the events.
+
+This particular operator offers a huge amount of overloads but the basic idea is always the same: have an original "one dimensional" stream, for each event generate/extract some kind of sub-stream (or collection or `Task`) (at this point you have a "two dimensional" stream) and "merge" all these sub-streams into one result stream.
+
+##### Merge
+
+A simplified version of this is the `Merge()` operator that has only 2 overloads and it will only do the "merging" part of the `SelectMany()` operator. It will just take a couple of already existing (but not necessarily active) streams and merge them (in contrary to the `SelectMany()` that creates the many streams as part of its logic).
+
+The `Merge()` operator has an overload where you can specify a number that will limit the maximum number of concurrent subscribtions to the underlying sub-streams.
+
+You can also think about the connection between `SelectMany()` and `Merge()` in a way that you can represent the functionality of `SelectMany()` with the combination of the `Select()` and `Merge()` operators.
 
 ![](Marble%20Diagrams/Merge.png)
 
-#### Concat
+##### Concat
+
+And last but not least, in this group, comes the `Concat()` operator, which is basically the same as `Merge(1)`, meaning it will subscribe to the sub-streams sequentially, one-by-one, concatenating them after each other instead of subscribing to many of them and merging their events.
+
+This example shows two hot observables using the `Concat()` operator, and as you can see it only starts looking at the second stream after the first one completed.
 
 ![](Marble%20Diagrams/Concat.png)
 
-#### Zip
+#### Zip and CombineLatest
+
+Until this point we were only discussing flattening operators that were combining multiple streams into one. But what if you want to do some kind of join?
+
+Doing traditional LINQ/SQL style join on streams might not be the best idea (though it's obviously not impossible to do). Instead you might be interested in "order based" joins like combining events with the same index from multiple streams (first element on one stream with the first element on the other stream, second with second, third with third, etc.), or always having an up-to-date combination of the latest elements on all streams.
+
+Doing traditional "equality based" join would mean that you subscribe to multiple streams, store all the events in a collection that ever appeared in them, and whenever any of them emmits an event, you try to join it with the stored collections and if successful, produce an event in the result stream containing the joined events.
+
+##### Zip
+
+So the first version of "order based" joining is when you join events from multiple streams based on their indexes. This can be achieved with the `Zip()` operator.
+
+To demonstrate it I will use two subjects and manually send events to them in mixed up order to then see the result being nicely "zipped" by the operator.
+
+```csharp
+var source1 = new Subject<int>();
+var source2 = new Subject<char>();
+
+var source = Observable.Zip(source1, source2, (i, c) => $"{i}:{c}");
+
+source1.OnNext(0);
+source1.OnNext(1);
+source2.OnNext('A');
+source2.OnNext('B');
+source2.OnNext('C');
+source1.OnNext(2);
+source1.OnNext(3);
+```
 
 ![](Marble%20Diagrams/Zip.png)
 
 #### CombineLatest
 
+The second version of the "order based" join is when you are interested in the combination of the latest events on all streams every time any of the streams produces a new event.
+
+A typical example for this would be to keep track of the key (or keys) pressed on the keyboard at the time the user clicks with their mouse. Depending on whether they pressed the CTRL or ALT or SHIFT or none of them (or a combination of those), you might have to do different things (selection, scaling, panning, etc.). I will not show such a complicated logic here, I will just reach for some subjects again to manually push events to demonstrate how the operator works.
+
+```csharp
+var source1 = new Subject<int>();
+var source2 = new Subject<char>();
+
+var source = Observable.CombineLatest(source1, source2, (i, c) => $"{i}:{c}");
+
+source1.OnNext(0);
+source1.OnNext(1);
+source2.OnNext('A');
+source1.OnNext(2);
+source1.OnNext(3);
+source2.OnNext('B');
+```
+
 ![](Marble%20Diagrams/CombineLatest.png)
 
-#### Amb
+#### Amb and Switch
+
+The `Amb()` and `Switch()` operators are designed to receive multiple streams and keep alive only one of them.
+
+##### Amb
+
+The `Amb()` will receive many streams, subscribe to them and wait for the first one to emmit an event and keep only that stream and throw away the rest of the streams.
+
+```csharp
+var source1 = Observable
+    .Timer(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+
+var source2 = Observable
+    .Timer(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1))
+    .Select(x => x * 10);
+
+var source = Observable.Amb(source1, source2);
+```
 
 ![](Marble%20Diagrams/Amb.png)
 
-#### Switch
+##### Switch
+
+In contrary to `Amb()`, `Switch()` always switches to the freshest stream. It doesn't work with a collection of streams, it works on a stream of streams and always only listens to the latest sub-stream. It's a little bit like `Concat()` but it forcibly closes the previous sub-stream if a new one appears instead of waiting for it to naturally complete and switching to the next one only after that.
+
+To demonstrate this I will do the following:
+* Create a base stream that will provide powers of 10 (10, 100, 1000, etc.) every 5 seconds
+* And on each event generate a sub-stream that will produce a sequence of numbers multiplied by the number from the base stream's event, so (1, 2, 3 or 10, 20, 30 or 100, 200, 300, etc.)
+* And as a last step, apply the `Switch()` operator on the resulting stream of streams
+
+```csharp
+var baseStream = Observable
+    .Interval(TimeSpan.FromSeconds(5))
+    .Select(i => Math.Pow(10, i));
+
+var subStreams = baseStream
+    .Select(i => Observable
+        .Interval(TimeSpan.FromSeconds(1))
+        .Select(j => i * j));
+
+var source = subStreams.Switch();
+```
+
+The result will look something like this:
 
 ![](Marble%20Diagrams/Switch.png)
 

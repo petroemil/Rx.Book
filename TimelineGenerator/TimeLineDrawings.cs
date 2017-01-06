@@ -189,7 +189,10 @@ namespace TimelineGenerator
 
         public async Task Switch()
         {
-            this.timelineDrawer.DrawTimeLine(4);
+            this.timelineDrawer.DrawTimeLine(0, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(1, 250, 1000);
+            this.timelineDrawer.DrawTimeLine(2, 450, 1000);
+            this.timelineDrawer.DrawTimeLine(3, 0, 1000);
 
             this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
             this.timelineDrawer.AddEventToTimeLine(0, 200, "1");

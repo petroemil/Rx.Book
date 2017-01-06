@@ -663,5 +663,108 @@ namespace RxSamples
                 .Return(42)
                 .Finally(() => { /* ... */ });
         }
+
+        public void SelectMany()
+        {
+            var source = new[] { 'A', 'B', 'C', 'D' }
+                .ToObservable()
+                .SelectMany(letter => Observable
+                    .Range(1, 5)
+                    .Delay(number => Observable.Timer(TimeSpan.FromSeconds(number)))
+                    .Select(number => $"{letter} -> {number}"));
+
+            this.Subscribe(source, "SelectMany");
+        }
+
+        public void Merge()
+        {
+            var source = new[] { 'A', 'B', 'C', 'D' }
+                .ToObservable()
+                .Select(letter => Observable
+                    .Range(1, 5)
+                    .Delay(number => Observable.Timer(TimeSpan.FromSeconds(number)))
+                    .Select(number => $"{letter} -> {number}"))
+                .Merge();
+
+            this.Subscribe(source, "Merge");
+        }
+
+        public void Concat()
+        {
+            var source = new[] { 'A', 'B', 'C', 'D' }
+                .ToObservable()
+                .Select(letter => Observable
+                    .Range(1, 5)
+                    .Delay(number => Observable.Timer(TimeSpan.FromSeconds(number)))
+                    .Select(number => $"{letter} -> {number}"))
+                .Concat();
+
+            this.Subscribe(source, "Concat");
+        }
+
+        public void Zip()
+        {
+            var source1 = new Subject<int>();
+            var source2 = new Subject<char>();
+
+            var source = Observable.Zip(source1, source2, (i, c) => $"{i}:{c}");
+
+            this.Subscribe(source, "Zip");
+
+            source1.OnNext(0);
+            source1.OnNext(1);
+            source2.OnNext('A');
+            source2.OnNext('B');
+            source2.OnNext('C');
+            source1.OnNext(2);
+            source1.OnNext(3);
+        }
+
+        public void CombineLatest()
+        {
+            var source1 = new Subject<int>();
+            var source2 = new Subject<char>();
+
+            var source = Observable.CombineLatest(source1, source2, (i, c) => $"{i}:{c}");
+
+            this.Subscribe(source, "CombineLatest");
+
+            source1.OnNext(0);
+            source1.OnNext(1);
+            source2.OnNext('A');
+            source1.OnNext(2);
+            source1.OnNext(3);
+            source2.OnNext('B');
+        }
+
+        public void Amb()
+        {
+            var source1 = Observable
+                .Timer(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+
+            var source2 = Observable
+                .Timer(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1))
+                .Select(x => x * 10);
+
+            var source = Observable.Amb(source1, source2);
+
+            this.Subscribe(source, "Amb");
+        }
+
+        public void Switch()
+        {
+            var baseStream = Observable
+                .Interval(TimeSpan.FromSeconds(5))
+                .Select(i => Math.Pow(10, i));
+
+            var subStreams = baseStream
+                .Select(i => Observable
+                    .Interval(TimeSpan.FromSeconds(1))
+                    .Select(j => i * j));
+
+            var source = subStreams.Switch();
+
+            this.Subscribe(source, "Switch");
+        }
     }
 }
