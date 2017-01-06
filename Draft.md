@@ -2084,7 +2084,7 @@ var source = Observable
     .GroupBy(x => x % 2 == 0)
     .SelectMany(x => x
         .Scan((accumulator, current) => accumulator += current)
-        .Select(y => $"Group '{x.Key}', element '{y}'"));
+        .Select(y => Tuple.Create(x.Key, y)));
 ```
 
 ![](Marble%20Diagrams/GroupByAdvanced.png)
