@@ -766,5 +766,47 @@ namespace RxSamples
 
             this.Subscribe(source, "Switch");
         }
+
+        // Window
+        // Buffer
+
+        public void Scan()
+        {
+            var source = Observable
+                .Range(0, 5)
+                .Scan((accumulator, current) => accumulator += current);
+
+            this.Subscribe(source, "Scan");
+        }
+
+        public void Aggregate()
+        {
+            var source = Observable
+                .Range(0, 5)
+                .Aggregate((accumulator, current) => accumulator += current);
+
+            this.Subscribe(source, "Aggregate");
+        }
+
+        public void GroupBy()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .GroupBy(x => x % 2 == 0);
+
+            this.Subscribe(source, "GroupBy");
+        }
+
+        public void GroupByAdvanced()
+        {
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .GroupBy(x => x % 2 == 0)
+                .SelectMany(x => x
+                    .Scan((accumulator, current) => accumulator += current)
+                    .Select(y => Tuple.Create(x.Key, y)));
+
+            this.Subscribe(source, "GroupBy Advanced");
+        }
     }
 }

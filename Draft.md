@@ -2020,15 +2020,74 @@ The result will look something like this:
 
 #### Window and Buffer
 
+The `Window()` operator will take the source stream and based on the various parameterisation it will open windows over the original stream that we can subscribe to. It can be parameterised in a way to create windows of n elements, or windows of x seconds, or windows of x seconds with a maximum of n elements, but you can alsotake more control over the opening and closing of windows by providing other streams as "signal streams" to close the existing and open a new window or to have overlapping windows opened by some event and closed by a connecting event. Like opening windows by pressing A, B or C and closing them by pressing 1, 2 or 3 but A will be closed by 1, B by 2 and C by 3.
+
+As Window produces an `IObservable<IObservable<T>>`, you will have to have some kind of strategy to flatten this nested hierarchy of observables by using `Merge()`, `Concat()`, `Switch()` or something custom.
+
+The `Buffer()` operator is very similar to the `Window()` but it won't make the individual windows available as observable streams, instead it waits for them to close and returns their content as a collection, so you will get an `IObservable<IEnumerable<T>>`. You would probably do some kind of mathematical operation on this collection of events to summarize that window.
+
+As long as you are using these operators with their basic overloads and cover predictable windows over the original datasource, I think it can be very useful especially for analytical/statistical purposes. Though an important note to mention is that there is no metadata (like a reference to the opening event for example) stored with either the sub-streams in case of the `Window()` or the collections in case of the `Buffer()` that would identify that particular window. So if you go crazy with opening and closing overlapping windows, well, good luck figuring out which window belongs to which pair of events.
+
 #### Scan and Aggregate
 
+These operators let you go through each event of a stream, holding some accumulator object and letting you modify it for each event.
+
+For example for a numerical stream you can choose to collect all elements into a list. In this case a list is the accumulator and you just add the new numbers to it as they appear in the stream. Or you can do something more useful and do min or max selection (though you have explicit operators for that), or add up all the numbers.
+
+The difference between the `Scan()` and `Aggregate()` operators is similar to the difference between the `Window()` and `Buffer()` in a way that `Scan()` is kind of a real time operator that emmits all the subsequent results of the aggregation as new events appear in the source stream, while the `Aggregate()` will only emmit the final result of the aggregation right after the original stream completes.
+
+Here you can see two examples to sum numbers using the `Scan()` and `Aggregate()` operators.
+
+```csharp
+var source = Observable
+    .Range(0, 5)
+    .Scan((accumulator, current) => accumulator += current);
+```
+
 ![](Marble%20Diagrams/Scan.png)
+
+```csharp
+var source = Observable
+    .Range(0, 5)
+    .Aggregate((accumulator, current) => accumulator += current);
+```
 
 ![](Marble%20Diagrams/Aggregate.png)
 
 #### GroupBy
 
+With the `GroupBy()` operator you can specify a key selector function that would extract some kind of partitioning information from the events and create sub-streams based on that key or just send new events into an already existing one.
+
+You will end up with an `IObservable<IGroupedObservable<T>>`, where the `IGroupedObservble<T>`'s only difference compared to the basic `IObservable<T>` is that is has a `Key` property, so you know which group it is.
+
+To demonstrate it with a very simple example you will devide numbers to 2 partitions: odd and even.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .GroupBy(x => x % 2 == 0);
+```
+
 ![](Marble%20Diagrams/GroupBy.png)
+
+As you can see the output of this operator will only have 2 events, one for creating the group "odd" and one for "even". If you are interested in the actual events that go into those groups, you have to subscribe to those sub-streams or use one of the flattening techniques to simplify this nested hierarchy.
+
+And here I would like to stop and make you think. If you have a `GroupBy()` operator that you later merge back into a single stream using the `Merge()` or `SelectMany()` operator while appending some metadata to the events (like their group key), what is the difference between using this technique compared to just using one simple `Select()` statement to generate that metadata? Probably nothing. 
+
+This operator is useful if you don't just do a simple grouping but you also apply some kind of logic to the inner streams (or groups or windows) and potentially merge them back only after that.
+
+For example we can "amplify" the previous example and say we want to have a "scan" (real time aggregation) of each group, but we also don't want to deal with this nested observable nonsense so we want all of these in a single stream, tagged by the key of the group.
+
+```csharp
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .GroupBy(x => x % 2 == 0)
+    .SelectMany(x => x
+        .Scan((accumulator, current) => accumulator += current)
+        .Select(y => $"Group '{x.Key}', element '{y}'"));
+```
+
+![](Marble%20Diagrams/GroupByAdvanced.png)
 
 ## Schedulers
 
