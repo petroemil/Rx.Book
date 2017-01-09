@@ -2238,10 +2238,11 @@ PROPER EXPLANATION COMING SOON
 
 UNTIL THEN SOME BULLETPOINTS
 
-* Use `TimeStamp()` instead of reaching out to the scheduler's `Now` or `Clock` property from the subscribtion callback.
-* Use only one scheduler and share it across the whole pipeline.
+* Use `TimeStamp()` instead of reaching out to the scheduler's `Now` or `Clock` property from the subscribtion callback
+* Use only one scheduler and share it across the whole pipeline
 * Save the "base time" in the beginning of the test
 * Use some kind of "close to" measurement to compare dates as they will likely not match exactly
+* Even though it's not shown in the example, use dependency injection to inject different scheduler to your pipeline in production and in test environments
 
 ## Rx + Async
 
