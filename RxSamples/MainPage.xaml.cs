@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
@@ -807,6 +811,71 @@ namespace RxSamples
                     .Select(y => Tuple.Create(x.Key, y)));
 
             this.Subscribe(source, "GroupBy Advanced");
+        }
+
+        public void HistoricalScheduler()
+        {
+            // Arrange
+            var baseTime = DateTimeOffset.Now;
+
+            var scheduler = new HistoricalScheduler(baseTime);
+            
+            var expectedValues = new[]
+            {
+                Timestamped.Create(0L, baseTime + TimeSpan.FromSeconds(10)),
+                Timestamped.Create(1L, baseTime + TimeSpan.FromSeconds(20)),
+                Timestamped.Create(4L, baseTime + TimeSpan.FromSeconds(30)),
+                Timestamped.Create(9L, baseTime + TimeSpan.FromSeconds(40)),
+                Timestamped.Create(16L, baseTime + TimeSpan.FromSeconds(50)),
+                Timestamped.Create(25L, baseTime + TimeSpan.FromSeconds(60))
+            };
+
+            var actualValues = new List<Timestamped<long>>();
+
+            var source = Observable
+                .Interval(TimeSpan.FromSeconds(10), scheduler)
+                .Select(x => x * x)
+                .Take(6);
+            
+            // Act (+ measure execution time)
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            source
+                .Timestamp(scheduler)
+                .Subscribe(x => actualValues.Add(x));
+
+            scheduler.Start();
+
+            stopwatch.Stop();
+
+            // Assert
+            if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
+            {
+                Console.WriteLine("The test was successfull");
+                Console.WriteLine($"And it only took { stopwatch.ElapsedMilliseconds }ms to run instead of 1 minute");
+            }
+            else
+            {
+                Console.WriteLine("The test failed");
+            }
+        }
+
+        private class TestDataEqualityComparer : IEqualityComparer<Timestamped<long>>
+        {
+            // Singleton object
+            private TestDataEqualityComparer() { }
+            private static TestDataEqualityComparer instance;
+            public static TestDataEqualityComparer Instance => instance ?? (instance = new TestDataEqualityComparer());
+
+            // Interface implementation
+            public int GetHashCode(Timestamped<long> obj) => 0;
+            public bool Equals(Timestamped<long> x, Timestamped<long> y)
+                => x.Value == y.Value && AreDateTimeOffsetsClose(x.Timestamp, y.Timestamp, TimeSpan.FromMilliseconds(10));
+
+            // Helper method to compare DateTimes
+            private static bool AreDateTimeOffsetsClose(DateTimeOffset a, DateTimeOffset b, TimeSpan treshold)
+                => Math.Abs((a - b).Ticks) <= treshold.Ticks;
         }
     }
 }

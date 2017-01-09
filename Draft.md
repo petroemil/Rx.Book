@@ -2091,15 +2091,150 @@ var source = Observable
 
 ## Schedulers
 
-### CoreDispatcherScheduler
+Schedulers are a core part of Rx. When you are building complicated pipelines, in special cases you might want greater control over the execution of parts of the pipeline. By default Rx is single threaded and it won't start spawning threads for you, though it's very much likely that the actual asynchronous code you wrap and use as part of your pipeline will execute its logic on background thread(s).
 
-### TaskPoolScheduler
+If you have a piece of code that is resource intensive and you want to parallelise it, you can explicitly specify this need using a scheduler. Or if it's the opposite way and you want that piece of code to be executed on the same thread and/or immediately, again, schedulers are going to be your good friends. Or an other great example for being explicit about the execution policy of your code is when you have to manipulate the UI and you have to marshall the execution to the UI thread.
 
-### ThreadPoolScheduler
+Schedulers are not just about threading though. In Rx you could see many examples for timing. Schedulers give the whole Rx system the sense of time. Every single Rx operator depends on it's scheduler's clock and not on the system provided static `DateTime.Now`. Thanks to this you can be in explicit control of the time which can come handy when you are writing tests for your pipeline, you can speed things up and make a pipeline with lots of timings unittestable.
 
-### ImmediateScheduler
+### The high level anatomy of schedulers
 
-### HistoricalScheduler
+I won't go into great details about schedulers because this is not really an in-depth kind of book, I would rather just cover the high level concept and give you some good idea about schedulers, how they work, how to use them.
+
+Schedulers are fairly simple and they just give an extra level of control over the execution of the piece of logic you pass to the various operators. They implement the `IScheduler` interface that defines the following contract:
+
+```csharp
+public interface IScheduler
+{
+    // Gets the scheduler's notion of current time.
+    DateTimeOffset Now { get; }
+
+    // Schedules an action to be executed.
+    IDisposable Schedule<TState>(TState state, Func<IScheduler, TState, IDisposable> action);
+    
+    // Schedules an action to be executed after (realtive) dueTime.
+    IDisposable Schedule<TState>(TState state, TimeSpan dueTime, Func<IScheduler, TState, IDisposable> action);
+    
+    // Schedules an action to be executed at (absolute) dueTime.
+    IDisposable Schedule<TState>(TState state, DateTimeOffset dueTime, Func<IScheduler, TState, IDisposable> action);
+}
+```
+
+With the `Now` property you can get some insight on the scheduler's notion of current time (which is mostly going to be interesting when you are writing unit tests), and three overloads of the `Schedule()` method for scheduling the execution of some action "immediately" or some time later in the future specified either by a realtive (`TimeSpan`) or an absolute (`DateTimeOffset`) time.
+
+### Types of schedulers
+
+You will likely never have to actually implement a scheduler, but you should just use the ones provided by the library.
+
+#### ImmediateScheduler
+
+With the `ImmediateScheduler` you can execute your logic immediately (synchronously) on the currently executing thread. This is basically forcing the execution to happen right now. Usually considering Rx has a lightweight "thread-free" execution model, it's not really adviced to be used. You can find it by referring to the `ImmediateScheduler.Instance` static property.
+
+#### CurrentThreadScheduler
+
+The next scheduler in the line is the `CurrentThreadScheduler` which can be found under the `CurrentThreadScheduler.Instance` property. This will queue the execution of the action on the currently executing thread, but it won't force it to execute immediately.
+
+#### TaskPoolScheduler and NewThreadScheduler
+
+If you want to make sure the execution will happen on a background thread, you can use the `TaskPoolScheduler` (`TaskPoolScheduler.Default`) which uses the TPL `TaskFactory` to schedule operations on the thread pool (very important that this is going to use a thread **pool** behind the scenes), or the `NewThreadScheduler` (`NewThreadScheduler.Default`) which will forcibly start a new thread for execution (which is not adviced to use because creating threads is expensive and creating too much will actually have a negative effect on the performance).
+
+#### ThreadPoolScheduler and CoreDispatcherScheduler (UWP)
+
+If you are building an UWP application, you can also use the WinRT `ThreadPool` with `ThreadPoolScheduler.Default`, and you will also have a special scheduler to marshall work to the UI thread, the `CoreDispatcherScheduler` (`CoreDispatcherScheduler.Current`), which is used so commonly that it even has it's own extensionmethod: `ObserveOnDispatcher()`.
+
+#### DefaultScheduler (will use the default thread pool for the platform)
+
+There's also a helper scheduler to schedule work on the available system `ThreadPool`, the `DefaultScheduler` which will choose between `System.Threading.ThreadPool` and `Windows.System.Threading.ThreadPool`.
+
+### Using schedulers
+
+Using schedulers can either be done by just simply passing an instance of it to the operator if it supports that kind of overload, or to make it more explicit without messing up the parameterisation of the operators, you can use the `ObserveOn()` or the `SubscribeOn()` extension methods explicitly.
+
+With the `SubscribeOn()` you can define where the *subscribtion* should happen, which would likely mean the execution of some asynchronous operation that you encapsulate with the `Observable.FromAsync()` operator or one of the other generator operators.
+
+On the other hand the `ObserveOn()` operator will define where the notifications (OnNext, OnCompleted, OnError) are executed going forward in the pipeline.
+
+It would be a good example to consider a client side application where you have some resource intensive operation that will yield some result but you want to display that result once you receive it. You would use the `SubscribeOn()` operator to make sure the execution will happen on a background thread, and the `ObserveOn()` (or more likely the `ObserveOnDispatcher()`) to marshall the result to the UI thread so you can display it.
+
+### Testing
+
+It's great that you have Rx in your disposal to handle all kinds of asynchronous and timed workflows and declaratively specify your threading strategy, but at some point you have to test what you built, to make sure it does what you think it should do. And I'm pretty sure you don't want to wait a minute in a unit test to figure out whether your timeout/retry logic works or not. Do you remember when I said Rx's notion of time relies on the scheduler it is using? This is an other point where the concept of shcedulers comes extremely handy.
+
+There is a spetial type of scheduler, the `HistoricalScheduler` that basically gives you the ability to speed up time, so that all the timed events will happen immediately.
+
+You can either use the absolutely manual way of adjusting the scheduler's clock by using the `AdvanceBy()` or `AdvanceTo()` methods to advance the clock by a relative amount of time or advance it to an absolute time, or you can just call the `Start()` method to run the scheduler until it has any scheduled elements.
+
+To demonstrate this here is an example to test a piece of pipeline that would normally take a minute to run, but in a unittest it will finish in the fraction of a second.
+
+```csharp
+// Arrange
+var baseTime = DateTimeOffset.Now;
+
+var scheduler = new HistoricalScheduler(baseTime);
+            
+var expectedValues = new[]
+{
+    Timestamped.Create(0L, baseTime + TimeSpan.FromSeconds(10)),
+    Timestamped.Create(1L, baseTime + TimeSpan.FromSeconds(20)),
+    Timestamped.Create(4L, baseTime + TimeSpan.FromSeconds(30)),
+    Timestamped.Create(9L, baseTime + TimeSpan.FromSeconds(40)),
+    Timestamped.Create(16L, baseTime + TimeSpan.FromSeconds(50)),
+    Timestamped.Create(25L, baseTime + TimeSpan.FromSeconds(60))
+};
+
+var actualValues = new List<Timestamped<long>>();
+
+var source = Observable
+    .Interval(TimeSpan.FromSeconds(10), scheduler)
+    .Select(x => x * x)
+    .Take(6);
+            
+// Act (+ measure execution time)
+var stopwatch = new Stopwatch();
+stopwatch.Start();
+
+source
+    .Timestamp(scheduler)
+    .Subscribe(x => actualValues.Add(x));
+
+scheduler.Start();
+
+stopwatch.Stop();
+
+// Assert
+if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
+{
+    Console.WriteLine("The test was successfull");
+    Console.WriteLine($"And it only took { stopwatch.ElapsedMilliseconds }ms to run instead of 1 minute");
+}
+else
+{
+    Console.WriteLine("The test failed");
+}
+```
+
+Plus the helper class to tompare the expected and real values:
+
+```csharp
+private class TestDataEqualityComparer : IEqualityComparer<Timestamped<long>>
+{
+    // Singleton object
+    private TestDataEqualityComparer() { }
+    private static TestDataEqualityComparer instance;
+    public static TestDataEqualityComparer Instance => instance ?? (instance = new TestDataEqualityComparer());
+
+    // Interface implementation
+    public int GetHashCode(Timestamped<long> obj) => 0;
+    public bool Equals(Timestamped<long> x, Timestamped<long> y)
+        => x.Value == y.Value && AreDateTimeOffsetsClose(x.Timestamp, y.Timestamp, TimeSpan.FromMilliseconds(10));
+
+    // Helper method to compare DateTimes
+    private static bool AreDateTimeOffsetsClose(DateTimeOffset a, DateTimeOffset b, TimeSpan treshold)
+        => Math.Abs((a - b).Ticks) <= treshold.Ticks;
+}
+```
+
+-- EXPLANATION COMING SOON --
 
 ## Rx + Async
 
