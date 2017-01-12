@@ -1,11 +1,12 @@
 # Table of contents
 
++ **Preface**
 + **Introduction**
   + [The problem - asynchrony](#the-problem---asynchrony)
   + [What is an Observable?](#what-is-an-observable)
   + [What is LINQ?](#what-is-linq)
   + [LINQ vs Rx](#linq-vs-rx)
-+ **Hello Rx**
++ **Hello Rx World**
   + [Preparations](#preparations)
   + [Traditional approach](#traditional-approach)
   + [Rx approach](#rx-approach)
@@ -17,6 +18,17 @@
   + [Schedulers](#shedulers)
   + [Rx + Async](#rx--async)
   + [Summary](#summary-1)
+
+# Preface
+
+When I finished my university a couple of years ago in 2013, I wrote my thesis about Rx and also released it as a free ebook available for anyone interested in learning about it. That book was written in hungarian, it was based on Rx 2.x version and it was aiming Windows 8 WinRT app developers. Since then some things have changed in the library (moving to NuGet, changed namespaces, etc), Windows 10 (UWP) got released and I had the chance to rethink some parts of the book and most importantly translate it to english.
+
+This book is not a hard core deep dive book going into deep internals of the library, it's an introduction for beginers who want some easy to understand "Hello World" level examples to see the various operators working alone and combined.
+
+I host this book on GitHub with the source code of the examples and any tools I've been using to put this book together, and I absolutely welcome any suggestions or requests to expand this book with, or potentially even do a series os blog posts or an other more in-depth book to talk about more advanced scenarios.
+
+I hope you are going to enjoy it.<br/>
+Let's get started.
 
 # Introduction
 
@@ -220,7 +232,7 @@ LINQ is actually more than these language elements, there is actual language lev
 | Takes a collection and allows you to transform, filter, order, group and do many more operations on it and returns the modified collection | Takes a source event stream and transforms, filters, orders, groups and does many more operations on it, and returns the modified event stream |
 | Is a collection of extension methods for the `IEnumerable<T>` interface | Is a collection of extension methods for the `IObservable<T>` interface |
 
-# Hello Rx
+# Hello Rx World
 
 ## Preparations
 
@@ -2171,7 +2183,7 @@ To demonstrate this here is an example to test a piece of pipeline that would no
 var baseTime = DateTimeOffset.Now;
 
 var scheduler = new HistoricalScheduler(baseTime);
-            
+
 var expectedValues = new[]
 {
     Timestamped.Create(0L, baseTime + TimeSpan.FromSeconds(10)),
@@ -2188,29 +2200,20 @@ var source = Observable
     .Interval(TimeSpan.FromSeconds(10), scheduler)
     .Select(x => x * x)
     .Take(6);
-            
-// Act (+ measure execution time)
-var stopwatch = new Stopwatch();
-stopwatch.Start();
 
-source
+var testSource = source
     .Timestamp(scheduler)
-    .Subscribe(x => actualValues.Add(x));
+    .Do(x => actualValues.Add(x));
 
+// Act
+testSource.Subscribe();
 scheduler.Start();
-
-stopwatch.Stop();
 
 // Assert
 if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
-{
     Console.WriteLine("The test was successfull");
-    Console.WriteLine($"And it only took { stopwatch.ElapsedMilliseconds }ms to run instead of 1 minute");
-}
 else
-{
     Console.WriteLine("The test failed");
-}
 ```
 
 Plus the helper class to tompare the expected and real values:
@@ -2234,16 +2237,93 @@ private class TestDataEqualityComparer : IEqualityComparer<Timestamped<long>>
 }
 ```
 
-PROPER EXPLANATION COMING SOON
+This code requires some quick remarks.
 
-UNTIL THEN SOME BULLETPOINTS
+As you could notice, all the schedulers are singletons, and so should your `TestScheduler` or `HistoricalScheduler` be. Always share the same instance of the scheduler between each operator in your pipeline. In a real-world scenario you would just use some dependency-injected `IScheduler` objects in your logic, and in production you would set real schedulers for those, and in test you would set a `TestScheduler` or `HistoricalScheduler`.
 
-* Use `TimeStamp()` instead of reaching out to the scheduler's `Now` or `Clock` property from the subscribtion callback
-* Use only one scheduler and share it across the whole pipeline
-* Save the "base time" in the beginning of the test
-* Use some kind of "close to" measurement to compare dates as they will likely not match exactly
-* Even though it's not shown in the example, use dependency injection to inject different scheduler to your pipeline in production and in test environments
+When it makes sense (it's not always the case) you should do assertions on events by specifying their expected value and time of occurance in the stream. To achieve this it's worth saving the date and time at the beginning of the test (and set this as the initial state of the test scheduler's clock) and use the `TimeStamp()` operator to tag each event with it's "birth date" (according to the scheduler of course) and make the assertion on these `TimeStamped<T>` objects. When you make assertion on time stamps, you should make "close to" assertions instead of equality checks, because those dates will never be exactly the same. It worth mentioning that this example is a very naive (or verbose) approach to do the setup and the assertion, you could write some generic helper methods to help you with the "boilerplate" so your test code can be more compact and can focus on the important things.
 
 ## Rx + Async
 
+Even though I've been talking about C#'s `async` and `await` keywords a lot throughout the book, I think it worth spending a couple of sentences to talk about the relationship between those keywords and Rx's `IObservable` streams.
+
+Long story short, they are "awaitable". In C# any object can be "awaitable" that meets a certain contract, it's not limited to the `Task` type. And the fun part is that these required methods are not enforced by some kind of interface, they just have to be there and the compiler will realise that the object is "awaitable". Even more fun is that these methods not even have to be actually on the object, you can provide them using extension methods, so you can actually make ANY type (or interface) awaitable by just defining a bunch of extension methods for that type.
+
+But what does it mean to `await` an `IObservable`? A stream can have many events in it during it's lifetime, but the `await` operator will only capture one thing. Is it going to be the first or last element, or is it going to be a list of all events that appeared in the stream during it's lifetime?
+
+The answer is: it's going to be the last element. It's like implicitly calling the `LastAsync()` operator on the stream. 
+
+Let's see a couple of simple examples to give you an idea of what can you achieve with Rx and the `await` keyword.
+
+If you have been converting a `Task` into an Rx stream for the sake of adding timeout and retry logic to it, at the end it will still return you one event or an exception, so it's directly suitable to just `await` as is. 
+
+```csharp
+var result = await Observable
+    .FromAsync(async () => "Hello World")
+    .Timeout(TimeSpan.FromSeconds(5))
+    .Retry(3);
+```
+
+If you would like to collect events but you are actually only interested in the result collection and not the real time events themselves, you can call `ToList()` on the stream which will do exactly what you need, collect all the events in a `List` and return that collection when the stream completes.
+
+```csharp
+var result = await Observable
+    .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+    .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+    .Take(TimeSpan.FromSeconds(5))
+    .ToList();
+```
+
+Or you can even do more interesting things, like popping up a dialogue and waiting for the user to press "Ok" or "Cancel" (or in the following example, hitting "Enter" or "ESC").
+
+```csharp
+var enter = Observable
+    .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+    .Select(e => e.EventArgs.Key)
+    .Where(k => k == VirtualKey.Enter)
+    .FirstAsync();
+
+var esc = Observable
+    .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+    .Select(e => e.EventArgs.Key)
+    .Where(k => k == VirtualKey.Escape)
+    .FirstAsync();
+
+var dialogResult = await Observable.Amb(enter, esc);
+
+Console.WriteLine($"The user pressed the {dialogResult} key");
+```
+
+When you are using the `await` keyword, you don't need to explicitly call the `Subscribe()` method on the stream to activate it, it happens implicitly by the `await` keyword. It also catches the `Exception` flowing on the OnError channel and throws it as an exception, so you can catch it in a traditional, imperative `try-catch` block as you can see it in the following example.
+
+```csharp
+try
+{
+    await Observable.Throw<int>(new Exception("Some problem happened in the stream"));
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
+```
+
+An other thing to consider is to use Rx schedulers in your imperative code.
+
+For example when you would normally write something like 
+
+```csharp
+await Task.Delay(TimeSpan.FromSeconds(5));
+```
+
+you could write instead
+
+```csharp
+var scheduler = CurrentThreadScheduler.Instance;
+await Observable.Timer(TimeSpan.FromSeconds(5), scheduler);
+```
+
+which means that if you get that scheduler from outside, your otherwise imperative code with timing inside will become really quick during unit tests. Of course you have to build on this assumption and always use the scheduler's clock instead of `DateTime.Now`, but it's always a good idea to not use `DateTime.Now` directly, because it makes unit testing complicated.
+
 ## Summary
+
+In this very long chapter you learned about working with Rx streams. Generating/converting existing event sources, building complex query pipelines to modify, filter and join streams, taking explicit control over the threading policy with schedulers and testing all of these in unit tests using special schedulers where you are in control of the time. And last but not least you could learn a little about the relationship between the `IObservable<T>` type and the `await` keyword.

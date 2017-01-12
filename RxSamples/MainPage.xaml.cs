@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -9,6 +8,7 @@ using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -819,7 +819,7 @@ namespace RxSamples
             var baseTime = DateTimeOffset.Now;
 
             var scheduler = new HistoricalScheduler(baseTime);
-            
+
             var expectedValues = new[]
             {
                 Timestamped.Create(0L, baseTime + TimeSpan.FromSeconds(10)),
@@ -836,29 +836,20 @@ namespace RxSamples
                 .Interval(TimeSpan.FromSeconds(10), scheduler)
                 .Select(x => x * x)
                 .Take(6);
-            
-            // Act (+ measure execution time)
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
 
-            source
+            var testSource = source
                 .Timestamp(scheduler)
-                .Subscribe(x => actualValues.Add(x));
+                .Do(x => actualValues.Add(x));
 
+            // Act
+            testSource.Subscribe();
             scheduler.Start();
-
-            stopwatch.Stop();
 
             // Assert
             if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
-            {
                 Console.WriteLine("The test was successfull");
-                Console.WriteLine($"And it only took { stopwatch.ElapsedMilliseconds }ms to run instead of 1 minute");
-            }
             else
-            {
                 Console.WriteLine("The test failed");
-            }
         }
 
         private class TestDataEqualityComparer : IEqualityComparer<Timestamped<long>>
@@ -876,6 +867,60 @@ namespace RxSamples
             // Helper method to compare DateTimes
             private static bool AreDateTimeOffsetsClose(DateTimeOffset a, DateTimeOffset b, TimeSpan treshold)
                 => Math.Abs((a - b).Ticks) <= treshold.Ticks;
+        }
+
+        public async void AwaitExample1()
+        {
+            var result = await Observable
+                .FromAsync(async () => "Hello World")
+                .Timeout(TimeSpan.FromSeconds(5))
+                .Retry(3);
+        }
+
+        public async void AwaitExample2()
+        {
+            var result = await Observable
+                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
+                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .Take(TimeSpan.FromSeconds(5))
+                .ToList();
+        }
+
+        public async void AwaitExample3()
+        {
+            var enter = Observable
+                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .Select(e => e.EventArgs.Key)
+                .Where(k => k == VirtualKey.Enter)
+                .FirstAsync();
+
+            var esc = Observable
+                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .Select(e => e.EventArgs.Key)
+                .Where(k => k == VirtualKey.Escape)
+                .FirstAsync();
+
+            var dialogResult = await Observable.Amb(enter, esc);
+
+            Console.WriteLine($"The user pressed the {dialogResult} key");
+        }
+
+        public async void AwaitExample4()
+        {
+            try
+            {
+                await Observable.Throw<int>(new Exception("Some problem happened in the stream"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public async void AwaitRxDelay()
+        {
+            var scheduler = CurrentThreadScheduler.Instance;
+            await Observable.Timer(TimeSpan.FromSeconds(5), scheduler);
         }
     }
 }
