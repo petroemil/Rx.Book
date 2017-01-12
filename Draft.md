@@ -23,9 +23,9 @@
 
 When I finished my university a couple of years ago in 2013, I wrote my thesis about Rx and also released it as a free ebook available for anyone interested in learning about it. That book was written in hungarian, it was based on Rx 2.x version and it was aiming Windows 8 WinRT app developers. Since then some things have changed in the library (moving to NuGet, changed namespaces, etc), Windows 10 (UWP) got released and I had the chance to rethink some parts of the book and most importantly translate it to english.
 
-This book is not a hard core deep dive book going into deep internals of the library, it's an introduction for beginers who want some easy to understand "Hello World" level examples to see the various operators working alone and combined.
+This book is not a hard core deep dive book going into deep internals of the library, it's an introduction for beginners who want some easy to understand "Hello World" level examples to see the various operators working alone and combined.
 
-I host this book on GitHub with the source code of the examples and any tools I've been using to put this book together, and I absolutely welcome any suggestions or requests to expand this book with, or potentially even do a series os blog posts or an other more in-depth book to talk about more advanced scenarios.
+I host this book on GitHub with the source code of the examples and any tools I've been using to put this book together, and I absolutely welcome any suggestions or requests to expand this book with, or potentially even do a series of blog posts or another more in-depth book to talk about more advanced scenarios.
 
 I hope you are going to enjoy it.<br/>
 Let's get started.
@@ -44,13 +44,13 @@ In short: Rx = Observables + LINQ + Schedulers
 
 To understand the concept of Observables, you first have to understand the basic difference between synchronous and asynchronous programming.
 
-Depending on what kind of application you are building, there is a good chance that most of the business logic is synchronous code which means that all the lines of code you write will be executed sequentially, one after the other. The computer takes a line, executes it, waits for it to finish and only after that will it go for the next line of code to execute it. A typical console application only contains synchronous code, to the level that if it have to wait for input from the user, it will just wait there doing exactly nothing.
+Depending on what kind of application you are building, there is a good chance that most of the business logic is synchronous code which means that all the lines of code you write will be executed sequentially, one after the other. The computer takes a line, executes it, waits for it to finish and only after that will it go for the next line of code to execute it. A typical console application only contains synchronous code, to the level that if it has to wait for input from the user, it will just wait there doing exactly nothing.
 
 In contrast with that, asynchrony means you want to do things in response to events you don't necessarily know when they happen.
 
 A good example for this is the `Click` event of a button on the UI, but also the response from a web service call. In the case of the latter it's very much possible that in terms of the execution order of the commands you know exactly that you only want to do things after you have the response, but you have to consider the chance that this service call could take seconds to return, and if it would be written in a synchronous way, the execution on the caller thread would be blocked and it couldn't do anything until the service call returns. And this can lead to very unpleasant experience for the users as they will just see the UI becoming unresponsive or "frozen". To make sure it doesn't happen you will have to do asynchronous call which means that the logic will be executed (or waited in the case of I/O operations) in the background without blocking the calling thread and you will get the result through some kind of callback mechanism. If you have been around in the developer industry for a while, you might remember the dark days of callback chains, but fortunately in C# 5.0 / .NET 4.5 (in 2012) Microsoft introduced the `async` and `await` keywords that makes it possible to write asynchronous code that looks like just a regular synchronous code. Just think about the difficulties of implementing simple language constructs like a conditional operation, a loop or a try-catch block with the traditional form (callbacks) of asynchronous programming. With these new keywords you can naturally use all of these while still having a performant, responsive and scalable asynchronous code. But even though it makes life significantly easier in many scenarios, the moment we want to do something a little more complicated, like a retry, timeout or adding paging functionality to a web service call, we have to start writing complex logic because hiding the difficulties of dealing with callbacks won't save us from implementing these custom operations.
 
-Events (in C#) has a serious problem though, they are not objects, you can't pass them around as method parameters, and tracking the subscribers of an event is also not trivial. This is where the Observer design patter comes in handy, because it pretty much re-implements events, but this time your event source and the subscribers will be objects and the subscription will be an explicit operation.
+Events (in C#) have a serious problem though, they are not objects, you can't pass them around as method parameters, and tracking the subscribers of an event is also not trivial. This is where the Observer design patter comes in handy, because it pretty much re-implements events, but this time your event source and the subscribers will be objects and the subscription will be an explicit operation.
 
 The Observer design pattern consists of two simple interfaces.
 
@@ -71,7 +71,7 @@ LINQ (Language Integrated Query) is making dev's life easier since .NET 3.5 (200
 >or going to the bar and telling the same guy <br/>
 > \- Now you grind the coffee, then get the water, warm it, at the same time prepare the milk, and I want these two thing to go in parallel...
 
-To bring a bit better example, think about how would you solve the following problem: Given a range of numbers, get the even numbers and sum their squares.
+To bring a bit better example, think about how you would solve the following problem: Given a range of numbers, get the even numbers and sum their squares.
 
 The very first solution would probably look something like the Code Sample 1-1.
 
@@ -122,7 +122,7 @@ Even though it doesn't belong to this specific example, but if you would combine
 
 ```csharp
 // Code Sample 1-3
-// Anonymus Type
+// Anonymous Type
 
 var person = new { Name = "Emil", Age = 27 };
 ```
@@ -141,11 +141,11 @@ return numbers
     .Sum();
 ```
 
-If you remember, the numbers variable is a collection of integers. How can you call a method called `Where()` on it, when the `List<T>` type doesn't have such method? The answer for this question are extension methods. In the good old days when you wanted to add new functionality to a type, you inherited a new class from the original type and defined the new method on it. This approach has two main problems though. On one side it's possible that the type you want to extend is sealed, the other problem is that even if you can define your own "super type", you will have to use that throughout your application and convert back and forth between that and the original type on the edges of your library.
+If you remember, the numbers variable is a collection of integers. How can you call a method called `Where()` on it, when the `List<T>` type doesn't have such method? The answer for this question is extension methods. In the good old days when you wanted to add new functionality to a type, you inherited a new class from the original type and defined the new method on it. This approach has two main problems though. On one side it's possible that the type you want to extend is sealed, the other problem is that even if you can define your own "super type", you will have to use that throughout your application and convert back and forth between that and the original type on the edges of your library.
 
 You don't have to think something too complicated. Just think about a function that extends the `string` with some special kind of formatting. If you want to use this logic in multiple places, you either have to move it to a static helper class or define your `SuperString` class. The latter in this specific example is not actually possible because the string type is sealed. So you are left with the static class. But think about how it would look of you would have to use more of these operations after each other...
 
-To solve these kind of problems, Microsoft introduced the extension methods in C#, which makes it possible to extend any class (or even interface) using the following syntax:
+To solve these kinds of problems, Microsoft introduced the extension methods in C#, which makes it possible to extend any class (or even interface) using the following syntax:
 
 ```csharp
 // Code Sample 1-5
@@ -154,7 +154,7 @@ To solve these kind of problems, Microsoft introduced the extension methods in C
 public static string SpecialFormat(this string s, int spaces)
 ```
 
-You have to place these extension methods in a static class. The interesting part of this method signature is it's very first parameter that has the `this` keyword in front of it. It means that you are extending the `string` class with this method. Whenever you have a `string` in your application, you can just call this method, the system will automatically hide this first parameter by implicitly passing the reference of the `string` there, and you only have to provide - in this example - the `int spaces` parameter. The Code Sample 1-6 shows an example for the usage of this method.
+You have to place these extension methods in a static class. The interesting part of this method signature is its very first parameter that has the `this` keyword in front of it. It means that you are extending the `string` class with this method. Whenever you have a `string` in your application, you can just call this method, the system will automatically hide this first parameter by implicitly passing the reference of the `string` there, and you only have to provide - in this example - the `int spaces` parameter. The Code Sample 1-6 shows an example for the usage of this method.
 
 ```csharp
 // Code Sample 1-6
@@ -163,7 +163,7 @@ You have to place these extension methods in a static class. The interesting par
 "Hello World".SpecialFormat(42);
 ```
 
-The way LINQ uses these extension methods brings this to the next level. To stay at the original example, let's take a quick look at the Where method's signature.
+The way LINQ uses these extension methods brings this to the next level. To stay at the original example, let's take a quick look at the `Where()` method's signature.
 
 ```csharp
 // Code Sample 1-7
@@ -191,7 +191,7 @@ The full syntax of a lambda expression looks like this:
 
 ```csharp
 // Code Sample 1-9
-// Lambda Expression in it's "full glory"
+// Lambda Expression in its "full glory"
 
 (param1, param2) =>
 {
@@ -203,7 +203,7 @@ The full syntax of a lambda expression looks like this:
 In front of the arrow operator (`=>`), between parentheses you get the parameters, and after the arrow, between curly braces you have the body of the expression.
 The reason you don't have to provide any type information for the parameters or the return type is because you are passing this expression as a delegate, so the compiler knows already all those information. 
 There are some shortcuts as well.
-If there's only one parameter, you can leave the parentheses, but if there's no parameter, you have to include an empty parentheses.
+If there's only one parameter, you can leave the parentheses, but if there's no parameter, you have to include an empty pair of parentheses.
 If the expression only contains one line of code, you also don't have to wrap it between curly braces and don't have to use the explicit return keyword.
 And of course don't forget about the case where you actually have the method that matches the delegate's signature, in which case you can provide only the name of the method, so you don't have to write something like `Method(x => F(x))`, it's enough to just write `Method(F)`.
 And just as a "fun fact" I'd like to mention that parallelizing the aforementioned example would only require one more operator in the beginning of the expression.
@@ -219,16 +219,16 @@ return numbers
     .Sum();
 ```
 
-Thanks to the `AsParallel()` operator the whole query operation will run in parallel. Just think about what would you do if this requirement would come up after only having the original implementation in place.
+Thanks to the `AsParallel()` operator the whole query operation will run in parallel. Just think about what you would do if this requirement would come up after only having the original implementation in place.
 
-LINQ is actually more than these language elements, there is actual language level support to write query expressions, but that's not really important from this book's point of view. What is important that LINQ is a smart combination of the aforementioned underlying language features, and a huge set of predefined extension methods for various types. One of those many types is the `IEnumerable<T>` class, but LINQ has very similar extension methods for other types of datasources, like relational databases (LINQ to SQL), XML (LINQ to XML), or in a way if we want to think about it that way events (LINQ to Events), which leads us to Rx.
+LINQ is actually more than these language elements, there is actual language level support to write query expressions, but that's not really important from this book's point of view. What is important that LINQ is a smart combination of the aforementioned underlying language features, and a huge set of predefined extension methods for various types. One of those many types is the `IEnumerable<T>` class, but LINQ has very similar extension methods for other types of data sources, like relational databases (LINQ to SQL), XML (LINQ to XML), or in a way if we want to think about it that way events (LINQ to Events), which leads us to Rx.
 
 ## LINQ vs Rx
 
 | LINQ (to Objects) | Rx |
 | ---: | :--- |
 | Can work with collections and it works on enumerable types, which means that it builds on the enumerator design pattern which is represented by the `IEnumerable<T>` and the `IEnumerator<T>` interfaces | Works with observable types, which means it builds on the observer design pattern which is represented by the `IObservable<T>` and `IObserver<T>` interfaces |
-| Represents a *polling* technique, as internally we keep polling the `MoveNext()` method on the `IEnumerator` for new elements in the collection. We ask the system for the next element | Represents a *push* technique, as internally the `IObservable` object keeps a reference to the subscribed `IObserver` and calls it's `OnNext()` callback method when some event occurs. The system notifies us if there is a new element available
+| Represents a *polling* technique, as internally we keep polling the `MoveNext()` method on the `IEnumerator` for new elements in the collection. We ask the system for the next element | Represents a *push* technique, as internally the `IObservable` object keeps a reference to the subscribed `IObserver` and calls its `OnNext()` callback method when some event occurs. The system notifies us if there is a new element available
 | Takes a collection and allows you to transform, filter, order, group and do many more operations on it and returns the modified collection | Takes a source event stream and transforms, filters, orders, groups and does many more operations on it, and returns the modified event stream |
 | Is a collection of extension methods for the `IEnumerable<T>` interface | Is a collection of extension methods for the `IObservable<T>` interface |
 
@@ -387,7 +387,7 @@ What will happen if you run the app?
 
 Probably one of the first things you will notice after playing with it a little bit is that thanks to the simulated random latency of queries you will receive suggestions out of order. You might try to type something like "where", but the logic sends a request for new suggestions after every single new character in the query, and it's very much possible that you receive suggestions for the fragment "wh" by the time you already typed "whe", in worse case even overriding the suggestions for "whe" because of the latency difference makes it possible that the response from the web service call returns the suggestions for "whe" sooner than the suggestions for "wh".
 
-An other problem that you might notice is not necessarily a logical problem, but more like a bad user experience. Requesting suggestions for every single new character the user types is a waste of resources (CPU, battery, network - not to mention money, if the user is using a metered connection, like 4G).
+Another problem that you might notice is not necessarily a logical problem, but more like a bad user experience. Requesting suggestions for every single new character the user types is a waste of resources (CPU, battery, network - not to mention money, if the user is using a metered connection, like 4G).
 
 Seeing these problems, let's try to collect the requirements for this app to work better.
 
@@ -435,7 +435,7 @@ You start the service call and a delay in parallel and wait for one of them to r
 
 ### Retry
 
-Retry logic usually involves some kind of loop, trying an operation over and over again n times. Again, the `await` keyword saves quite a lot of code as you can use await withing a `for` or `while` loop, but you have to write some code to make it happen. Here is a possible implementation.
+Retry logic usually involves some kind of loop, trying an operation over and over again n times. Again, the `await` keyword saves quite a lot of code as you can use await within a `for` or `while` loop, but you have to write some code to make it happen. Here is a possible implementation.
 
 ```csharp
 // Code Sample 2-9
@@ -454,9 +454,9 @@ public async Task<IEnumerable<string>> ServiceCall_Retry(string query)
 }
 ```
 
-The code basically includes a `for` loop that loops 3 times and if it "succesfully" manages to do that, at the end of the method an exception waits to be thrown. So loop - loop - loop - throw.
+The code basically includes a `for` loop that loops 3 times and if it "successfully" manages to do that, at the end of the method an exception waits to be thrown. So loop - loop - loop - throw.
 
-Inside the `for` loop is the actual service call in a `try`-`catch` block. <br/>
+Inside the `for` loop you can find the actual service call in a `try`-`catch` block. <br/>
 If the service call returns successfully, the method returns and there won't be any more looping or exception throwing at the end. <br/>
 But if the service call fails, the `try`-`catch` block "swallows" it and lets the `for` loop to go to the next iteration and retry it, or exit the `for` loop and throw the exception at the end of the method.
 
@@ -464,7 +464,7 @@ But if the service call fails, the `try`-`catch` block "swallows" it and lets th
 
 Throttling, distinct check and race condition handling are more complicated tasks to implement. By their nature they will filter out some of the requests, not returning anything for them. There won't be a 1:1 connection between the requests and responses, there will be more requests than responses.
 
-Throttling will let you request suggestions as frequently as you want, but internally it will only issue a request (and produce any kind respnse) after the user haven't touched the keyboard for half second.
+Throttling will let you request suggestions as frequently as you want, but internally it will only issue a request (and produce any kind response) after the user haven't touched the keyboard for half second.
 
 Yet again, for the distinction check, you can requests suggestions as many times as you want, but internally it will only send the request through if it's different than the previous request.
 
@@ -522,7 +522,7 @@ public async void ServiceCall_Distinct(string query)
 
 Dealing with race condition will happen with a typical optimistic concurrency approach. Tag the service call with a unique identifier save it in a shared variable, wait for it to return and check if it this time the saved identifier is still the same as the identifier of the just returned service call. <br/>
 If they are the same, it means that no other service calls were issued during the time the original service call was being processed, and it's still the latest, most recent result. <br/>
-If they don't match though, it means that an other service call has been made while waiting for the first one, invalidating the first service call's result as it's no longer the most recent one.
+If they don't match though, it means that another service call has been made while waiting for the first one, invalidating the first service call's result as it's no longer the most recent one.
 
 In this specific example you won't have to actually explicitly tag the service calls with some kind of `Guid`, you can just use the `Task` object's reference that represents the service call.
 
@@ -698,7 +698,7 @@ private void ErrorCallBack(Exception exception)
 
 ## Rx approach
 
-When you think about Rx, you have to think about it as a stream or pipeline. You put a message into the pipeline and it will go through various steps of transformation, filtering, groupping, aggregating, delaying, throttling, etc.
+When you think about Rx, you have to think about it as a stream or pipeline. You put a message into the pipeline and it will go through various steps of transformation, filtering, grouping, aggregating, delaying, throttling, etc.
 
 After you defined your logic as a series of steps, you can subscribe to this stream of events and act on anything coming out of it.
 
@@ -731,9 +731,9 @@ public static class ServiceCallWrapper
 As you can see the code is significantly simpler and more readable than the "traditional approach".
 
 There are two main differences that I would like to point out. You won't call this method directly each time you have a new value, you just provide "some source" that will provide the input strings for the service call.
-The other one is that as an output you didn't have to define events, it will be just an other `IObservable` stream, that the consumer logic can subscribe to.
+The other one is that as an output you didn't have to define events, it will be just another `IObservable` stream that the consumer logic can subscribe to.
 
-If you remember what I wrote about LINQ, you might notice a similarity of the method signature: recieving some `IObservable<TIn>` as a parameter and returning an `IObservable<TOut>`. This is a perfect candidate to be turned into an extension method - and by the way a great example to show how to build custom operators for Rx.
+If you remember what I wrote about LINQ, you might notice a similarity of the method signature: receiving some `IObservable<TIn>` as a parameter and returning an `IObservable<TOut>`. This is a perfect candidate to be turned into an extension method - and by the way a great example to show how to build custom operators for Rx.
 
 ```csharp
 // Code Sample 2-18
@@ -811,7 +811,7 @@ Once you have your source in place, you can finally use your prepared extension 
 The rest of the pipeline goes like this: <br/>
 The `ObserveOnDispatcher()` operator is used to marshall the flow of the observable stream back to the UI thread. <br/>
 The `Do()` operator lets you to inspect the stream at specific positions - this is where the actual CallBack methods are called. <br/>
-The `Retry()` operator is necessarry to make sure the stream never gets terminated by some unhandled exception. <br/>
+The `Retry()` operator is necessary to make sure the stream never gets terminated by some unhandled exception. <br/>
 And lastly the `Subscribe()` method is the method that actually activates this whole logic. Until you don't call subscribe, the stream is just a definition of steps, but it won't do anything.
 
 ## Summary
@@ -919,7 +919,7 @@ private void Subscribe<T>(IObservable<T> source, string subscribtionName)
 
 The `ObserveOnDispatcher()` is required to make sure no matter which thred the stream is coming from, it's definitely marshalled to the UI thread.
 
-And the `Subscribe()` method is fairly trivial, you just handel all possible notification types by providing all three of the callbacks for `OnNext`, `OnError`and `OnCompleted`.
+And the `Subscribe()` method is fairly trivial, you just handle all possible notification types by providing all three of the callbacks for `OnNext`, `OnError` and `OnCompleted`.
 
 Even though you now have this console application, you will also have a more visual marble diagram at every operator to describe what they are doing.
 
@@ -998,7 +998,7 @@ var source = Observable.Range(0, 10);
 
 #### Generate
 
-Generate works in a very similar way to a traditional `for` loop. You have to provide an initial value, a condition to be checked and an iteration. 
+Generate works in a very similar way to a traditional `for` loop. You have to provide an initial value, a condition to be checked and an iterator logic. 
 
 ```csharp
 // Code Sample 3-10
@@ -1017,7 +1017,7 @@ var source = Observable.Generate(
 
 With the `Interval()` operator you get two things:
 * a generated sequence of numbers starting from 0
-* and the values with a time dealy between them specified by you
+* and the values with a time delay between them specified by you
 
 It also worth mentioning that this stream never ends.
 
@@ -1092,11 +1092,11 @@ var sourceFromTask = Task.FromResult("A").ToObservable();
 
 #### FromAsync
 
-If you have an asynchronous operation that is represented by a `Task`, you should use the `FromAsync()` operator to convert it to an observable stream. The reason for that is 2 words: lazy evaulation. 
+If you have an asynchronous operation that is represented by a `Task`, you should use the `FromAsync()` operator to convert it to an observable stream. The reason for that are 2 words: lazy evaluation. 
 
 The `ToObservable()` operator can only act on an existing `Task` object. If you have some kind of retry logic defined in your stream description, in case of using the `ToObservable()` operator, it will always go back to the same `Task` object and query it's state. There is no way to somehow rerun the function that produced that `Task`.
 
-But if you use the `FromAsync()` operator that wraps the function itself that produces the `Task`, if you re-subscribe (for example because of a failure), it will actually re-execute the function, producding a new `Task` with that, so at least you have the chance to recover from a transient error.
+But if you use the `FromAsync()` operator that wraps the function itself that produces the `Task`, if you re-subscribe (for example because of a failure), it will actually re-execute the function, producing a new `Task` with that, so at least you have the chance to recover from a transient error.
 
 ```csharp
 // Code Sample 3-16
@@ -1109,7 +1109,7 @@ var goodExample = Observable.FromAsync(SomeAsyncOperation);
 
 #### FromEventPattern
 
-An other good candidate to convert to Rx stream is the .NET event.
+Another good candidate to convert to Rx stream is the .NET event.
 
 Most cases when you have to deal with events they have a typical signature that looks something like `(object sender, EventArgs args)`. As long as the event follows this signature, you can use a simplified way to convert these events to observables, like this:
 
@@ -1154,7 +1154,7 @@ The operator gives a reference to this `OnNext` function to you, and expects you
 
 Once you got your head around this rather complicated line, the last 2 parameters of the method are fairly simple, you just get a reference to the event handler (prepared by the system) that you have to subscribe to and unsubscribe from the original `event`.
 
-It's worth mentioning that this example is the worst case scenario. If your event doesn't have any parameters or only has one, you don't have to bother with this cimplicated conversion logic, you just have to provide the subscribe / unsubscribe functions.
+It's worth mentioning that this example is the worst case scenario. If your event doesn't have any parameters or only has one, you don't have to bother with this complicated conversion logic, you just have to provide the subscribe / unsubscribe functions.
 
 ### Hot and Cold observables
 
@@ -1162,13 +1162,13 @@ Even though so far I didn't talk about it explicitly, you might have realised th
 
 There are real-time data sources, like most (if not all) of the .NET events (`PointerMoved`, `Click`, `KeyDown`, etc.), data sources that you can observe, but can't really control when they emit new events, and they've likely been virtually active before you subscribed to the stream.
 
-And there are data sources, like an asynchronous method call, that you can still treat as an Rx stream, but you know that the service call will be triggered by your subscription to the (`FromAsync()`) observable stream. You know that any kind of event will only appear in the stream after you subscribed to it, because the subscribtion triggered the execution of the underlying logic that puts events in the stream.
+And there are data sources, like an asynchronous method call, that you can still treat as an Rx stream, but you know that the service call will be triggered by your subscription to the (`FromAsync()`) observable stream. You know that any kind of event will only appear in the stream after you subscribed to it, because the subscription triggered the execution of the underlying logic that puts events in the stream.
 
 The aforementioned real-time data sources are called "Hot Observables", and the other group is called "Cold Observables". You can convert easily switch them around by introducing caching for a hot observable, or "broadcasting" the events from the source of a cold observable to all of its subscribers.
 
 #### Creating hot observables
 
-To turn a cold observable into a hot one, you will have to use the combination of the `Publish()` and the `Connect()` methods. The `Publish()` will prepare you an observable object that wraps your original observable stream and broadcasts its values to all the subscribers. And in this case instead of the `Subscribe()` call, calling the `Connect()` method will activate the stream and trigger the subscribtion chain in the wrapped observable, and with that the execution/activation of the underlying data source that will put events into the stream.
+To turn a cold observable into a hot one, you will have to use the combination of the `Publish()` and the `Connect()` methods. The `Publish()` will prepare you an observable object that wraps your original observable stream and broadcasts its values to all the subscribers. And in this case instead of the `Subscribe()` call, calling the `Connect()` method will activate the stream and trigger the subscription chain in the wrapped observable, and with that the execution/activation of the underlying data source that will put events into the stream.
 
 To demonstrate this let's create a simple cold observable using the `Interval()` operator. It will generate a new stream for each of its subscribers instead of sharing the same one. You can easily see it in action with the following little sample:
 
@@ -1185,7 +1185,7 @@ await Task.Delay(TimeSpan.FromSeconds(3));
 this.Subscribe(source, "#2");
 ```
 
-If you run this, you will see events popping up on your screen from the two subscribtions like this:
+If you run this, you will see events popping up on your screen from the two subscriptions like this:
 
 ![](Marble%20Diagrams/ColdObservableSample.png)
 
@@ -1206,7 +1206,7 @@ await Task.Delay(TimeSpan.FromSeconds(3));
 this.Subscribe(publishedSource, "#2");
 ```
 
-The code above shows you how to publish a stream and turn it into a hot observable. As you can see you are subscribing to the `publishedSource` and because you imeediately call `Connect()` and subscribe with the 1st observable, it will immediately start producing new values. And you can also see that this is a hot observable because after waiting 3 seconds and subscribing the 2nd observable, it will only receive values that have been emitted from the source after the subscribtion, meaning it will never see the origin of the source.
+The code above shows you how to publish a stream and turn it into a hot observable. As you can see you are subscribing to the `publishedSource` and because you immediately call `Connect()` and subscribe with the 1st observable, it will immediately start producing new values. And you can also see that this is a hot observable because after waiting 3 seconds and subscribing the 2nd observable, it will only receive values that have been emitted from the source after the subscription, meaning it will never see the origin of the source.
 
 ![](Marble%20Diagrams/PublishSample1.png)
 
@@ -1235,7 +1235,7 @@ The marble diagram for this case looks something like this:
 
 The logic behind "cooling down" an observable is similar to the logic discussed about hot observables, but obviously it will go the other way around. In this case you will have to use the combination of `Replay()` and `Connect()` methods. The `Replay()` method will wrap the original (hot) observable into a caching stream, but it will only start recording and emitting the values after the `Connect()` method has been called.
 
-As a demonstration let's just create a hot observable and make 2 subscribtins to it to prove that it's hot.
+As a demonstration let's just create a hot observable and make 2 subscriptions to it to prove that it's hot.
 
 ```csharp
 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -1254,11 +1254,11 @@ Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
 this.Subscribe(source, "#2");
 ```
 
-After running this example, you can clearly see that you only recieve events with dates after the date of the subscribtion.
+After running this example, you can clearly see that you only receive events with dates after the date of the subscription.
 
 ![](Marble%20Diagrams/HotObservableSample.png)
 
-Now, just like in the previous example, let's try to "cool it down" by using the `Replay()` and `Connect()` methods. In the first example call the `Connect()` immediately, meaning this cold observable will start caching the events of the underlying hot observable immediately, and every time someone subscribes to this cold observable, they will receiv the whole history of events since the activation of the stream.
+Now, just like in the previous example, let's try to "cool it down" by using the `Replay()` and `Connect()` methods. In the first example call the `Connect()` immediately, meaning this cold observable will start caching the events of the underlying hot observable immediately, and every time someone subscribes to this cold observable, they will receive the whole history of events since the activation of the stream.
 
 ```csharp
 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -1349,7 +1349,7 @@ subject.OnCompleted();
 subject.OnNext("4");
 ```
 
-In this example you will recieve the events "2" and "3". You won't recieve "1" because it happened before the subscribtion, and remember, `Subject` is a hot observable, and you also won't recieve "4" because it happened after the `OnCompleted` event, which is a terminating event and implicitly disposes the whole stream (or more precisely the connections between the pieces of the stream).
+In this example you will receive the events "2" and "3". You won't receive "1" because it happened before the subscription, and remember, `Subject` is a hot observable, and you also won't receive "4" because it happened after the `OnCompleted` event, which is a terminating event and implicitly disposes the whole stream (or more precisely the connections between the pieces of the stream).
 
 #### ReplaySubject
 
@@ -1366,12 +1366,12 @@ replaySubject.OnNext("3");
 
 In this example you can see that the `ReplaySubject` replays every event it flew through it to each of its subscribers.
 
-The 1st subscribtion will immediately receive "1" after subscribtion, and later "2" and "3" as they appear. <br/>
-The 2nd subscribtion will immediately recieve "1" and "2" after subscribtion, and later "3" as it appears.
+The 1st subscription will immediately receive "1" after subscription, and later "2" and "3" as they appear. <br/>
+The 2nd subscription will immediately receive "1" and "2" after subscription, and later "3" as it appears.
 
 #### BehaviorSubject
 
-The `BehaviorSubject` is very similar to the regular `Subject`, so it's a hot observable, but it does an extra trick by also replaying the last element before the occurance of a subscribtion. To make sure it can always provide a "last element" immediately on subscribtion, you have to provide a default value to it, so even if technically there was no event flowing through it, it can still provide this default value on subscribtion.
+The `BehaviorSubject` is very similar to the regular `Subject`, so it's a hot observable, but it does an extra trick by also replaying the last element before the occurrence of a subscription. To make sure it can always provide a "last element" immediately on subscription, you have to provide a default value to it, so even if technically there was no event flowing through it, it can still provide this default value on subscription.
 
 ```csharp
 var behaviorSubject = new BehaviorSubject<string>("0");
@@ -1384,13 +1384,13 @@ behaviorSubject.OnCompleted();
 this.Subscribe(behaviorSubject, "BehaviorSubject #3");
 ```
 
-The 1st subscribtion will see "0", "1", "2", "3" and "OnCompleted". <br/>
-The 2nd subscribtion will see "2", "3" and "OnCompleted". <br/>
-But the 3rd subscribtion, that happened after the stream have been terminated by the `OnCompleted()` call, will only see the "OnCompleted" event but not the last event before it.
+The 1st subscription will see "0", "1", "2", "3" and "OnCompleted". <br/>
+The 2nd subscription will see "2", "3" and "OnCompleted". <br/>
+But the 3rd subscription, that happened after the stream have been terminated by the `OnCompleted()` call, will only see the "OnCompleted" event but not the last event before it.
 
 #### AsyncSubject
 
-`AsyncSubject` caches the last element that flows through it and publishes it once it's source observable is terminated. Any future subscribtions to the subject will receive the same cached value. It's like keeping a reference to an asynchronous operation's `Task` object. This is also the kind of behavior you can see when you `await` an `IObservable` stream, but more on that later.
+`AsyncSubject` caches the last element that flows through it and publishes it once it's source observable is terminated. Any future subscriptions to the subject will receive the same cached value. It's like keeping a reference to an asynchronous operation's `Task` object. This is also the kind of behaviour you can see when you `await` an `IObservable` stream, but more on that later.
 
 ```csharp
 var asyncSubject = new AsyncSubject<string>();
@@ -1402,13 +1402,13 @@ asyncSubject.OnCompleted();
 this.Subscribe(asyncSubject, "AsyncSubject #2");
 ```
 
-The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscribtion will see the events "3" and "OnCompleted" when (or after) `OnCompeted()` have been called on the subject.
+The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscription will see the events "3" and "OnCompleted" when (or after) `OnCompeted()` have been called on the subject.
 
 ## LINQ
 
 Up until this point in this chapter you were learning about the basics of observables. How to create them, convert existing event sources or use subjects to manually push events into a stream, what kind of characteristics they have, etc.
 
-The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everydays for simple tasks like doing some data transformation on the events, filter them, or more advanced tasks like error handling, combining multiple streams, etc.
+The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everyday for simple tasks like doing some data transformation on the events, filter them, or more advanced tasks like error handling, combining multiple streams, etc.
 
 I believe the absolute top two standard LINQ operators are the `Select()` and `Where()`, so let's start with those.
 
@@ -1429,7 +1429,7 @@ var source = Observable
 
 #### Where
 
-The ability to do basic filtering on the events is incredibly useful especially in cases when your source is quite "noisy". What if you want to detect if your users are moving their pointer (mouse/touch/stylus/gaze/whatever) over a certain part of your UI? Your naive solution would be to subscribe to the `PointerMoved` event and in the eventhandler make a big `if` statement because you only care about certain positions. Let's assume you want to divide your UI to a grid of 100x100 pixel rectangles, and you only care about the cases when the user is moving his/her pointer within the diagonal rectangles, so where the rectangle's position is like x=y.
+The ability to do basic filtering on the events is incredibly useful especially in cases when your source is quite "noisy". What if you want to detect if your users are moving their pointer (mouse/touch/stylus/gaze/whatever) over a certain part of your UI? Your naive solution would be to subscribe to the `PointerMoved` event and in the event handler make a big `if` statement because you only care about certain positions. Let's assume you want to divide your UI to a grid of 100x100 pixel rectangles, and you only care about the cases when the user is moving his/her pointer within the diagonal rectangles, so where the rectangle's position is like x=y.
 
 ```csharp
 var source = Observable
@@ -1461,13 +1461,13 @@ var source = Observable
 
 ![](Marble%20Diagrams/DistinctUntilChanged.png)
 
-There is a stronger version of this operator that you would tipically use in a more traditional data query, the `Distinct()`, which guarantees that a given value can only occur once in the lifetime of the stream and every other occurances will be filtered out.
+There is a stronger version of this operator that you would typically use in a more traditional data query, the `Distinct()`, which guarantees that a given value can only occur once in the lifetime of the stream and every other occurrences will be filtered out.
 
 #### Skip
 
 While the `Where()` operator works on the whole stream, checks each element against a predicate and decides whether to keep it or not, but it's possible that you might just want to skip elements at the beginning or end of the stream. And this is exactly what you can do with the different variations of the `Skip()` operator.
 
-The most simple version let's you specify the number of elements or the duration of time you want to skip at the beginning (with the `Skip()`) or end (with the `SkipLast()`) of the stream.
+The most simple version lets you specify the number of elements or the duration of time you want to skip at the beginning (with the `Skip()`) or end (with the `SkipLast()`) of the stream.
 
 ```csharp
 var source = Observable
@@ -1477,7 +1477,7 @@ var source = Observable
 
 ![](Marble%20Diagrams/Skip.png)
 
-It's worth mentioning that by it's nature the `SkipLast()` will only produce elements after it's source stream has completed. It makes sense, you can only tell which elements were the last 3 (for example) after the source has terminated.
+It's worth mentioning that by its nature the `SkipLast()` will only produce elements after its source stream has completed. It makes sense, you can only tell which elements were the last 3 (for example) after the source has terminated.
 
 ```csharp
 var source = Observable
@@ -1497,7 +1497,7 @@ var source = Observable
 
 ![](Marble%20Diagrams/SkipUntil.png)
 
-And last but not least it's also possible to provide a predicate saying you want to skip every element until the predicate is true. After the first time the predicate evaluates to false, it will start letting events throguh and won't evaluate the predicate any more (otherwise it would be equivalent to the `Where()` operator).
+And last but not least it's also possible to provide a predicate saying you want to skip every element until the predicate is true. After the first time the predicate evaluates to false, it will start letting events through and won't evaluate the predicate any more (otherwise it would be equivalent to the `Where()` operator).
 
 ```csharp
 var source = Observable
@@ -1574,7 +1574,7 @@ All of these operators have 2x2 versions.
 
 The normal version requires the operator to successfully execute, otherwise it throws an exception (produces an OnError event). So the `First()` or `Last()` operators will fail if there is no element in the stream, the `ElementAt()` will fail if the specified index doesn't exist before the stream is terminated and the `Single()` will fail if there is either more or less element in the stream than one.
 
-There is a more tolerant version version for these operators which adds an `OrDefault` ending to their name. It means if it would normally fail, it will rather return the `default` value for the given tpye (`null` for reference types, `0` for `int`, `false` for `bool`, etc.).
+There is a more tolerant version for these operators which adds an `OrDefault` ending to their name. It means if it would normally fail, it will rather return the `default` value for the given type (`null` for reference types, `0` for `int`, `false` for `bool`, etc.).
 
 These operators also support an additional overload where you can specify a predicate. For example in case of the `First()` operator it would mean that it wouldn't just blindly return the very first element in the source stream, but it would wait for the first element that evaluates the provided predicate to `true`.
 
@@ -1659,7 +1659,7 @@ In your application you might need to handle cases if an event source didn't pro
 #### StartWith
 
 There are basically two ways to "use" Rx. One of them is when you are subscribing to a stream with a long runtime and just handle the events. It's similar kind of use case to traditional .NET events. You just subscribe and the stream might never terminate. <br/>
-In this case you might have a requirement to receive an event immediately after subscribing to the stream even if the source didn't *actually* produced an event. In this scenario you can use the `StartWith()` operator to proactively inject one or more elements to the beginning of the stream that the subscriber will definitely receive right after subscribtion.
+In this case you might have a requirement to receive an event immediately after subscribing to the stream even if the source didn't *actually* produced an event. In this scenario you can use the `StartWith()` operator to proactively inject one or more elements to the beginning of the stream that the subscriber will definitely receive right after subscription.
 
 ```csharp
 var source = Observable
@@ -1692,7 +1692,7 @@ This is a fairly naive way to compare two streams or a stream with a traditional
 
 #### Contains
 
-Checks if a given event occured in the stream. It will return `true` as soon as the element-in-question appears in the stream.
+Checks if a given event occurred in the stream. It will return `true` as soon as the element-in-question appears in the stream.
 
 #### IsEmpty
 
@@ -1712,7 +1712,7 @@ The `Any()` will return `true` if the predicate returns `true` for any of the el
 
 #### Delay
 
-The `Delay()` operator will do exactly what you would expect it to do. It takes the source stream, preserving the relative time between its events, and delays its elements by some specified amount of time. You can specify this delay by providing a `TimeSpan` or a `DateTime` value. The `TimeSpan` will of course just delay the occurence of the events in the stream with the specified amount of time, while the `DateTime` will delay all the events to appear after that absolute time (again, the relative time between the events are preserved).
+The `Delay()` operator will do exactly what you would expect it to do. It takes the source stream, preserving the relative time between its events, and delays its elements by some specified amount of time. You can specify this delay by providing a `TimeSpan` or a `DateTime` value. The `TimeSpan` will of course just delay the occurrence of the events in the stream with the specified amount of time, while the `DateTime` will delay all the events to appear after that absolute time (again, the relative time between the events are preserved).
 
 ```csharp
 var source = Observable
@@ -1722,19 +1722,19 @@ var source = Observable
 
 ![](Marble%20Diagrams/Delay.png)
 
-There is also a way to provide some logic that will be applied to all individual elements in the original stream and calculate the delay for them. The interesting bit here is that you don't get an overload where you can provide a function that receives the actual event and returns a `TimeSpan` or `DateTime`, instead you have to return an `IObservable` that will be used as a "signaling stream": when it produces its first element, the `Delay()` operator will emmit the associated event on its output stream.
+There is also a way to provide some logic that will be applied to all individual elements in the original stream and calculate the delay for them. The interesting bit here is that you don't get an overload where you can provide a function that receives the actual event and returns a `TimeSpan` or `DateTime`, instead you have to return an `IObservable` that will be used as a "signalling stream": when it produces its first element, the `Delay()` operator will emit the associated event on its output stream.
 
 In this case it's also possible that your logic will delay the event "n" to a later point in time than the event "n+1", meaning this might mess up the order of your events.
 
-There are some other operators where you can use this kind of pattern of providing an `IObservable<object>` (the actual data travelling on it doesn't matter, hence the `object`) as a "signaling stream".
+There are some other operators where you can use this kind of pattern of providing an `IObservable<object>` (the actual data travelling on it doesn't matter, hence the `object`) as a "signalling stream".
 
 #### Throttle
 
 You could already read a little bit about the `Throttle()` operator in the Introduction chapter. Its purpose is to throttle the stream to not produce events too fast. You might want to build an auto-complete TextBox that is hooked to some web service to provide its suggestions, and you would probably not want to send a web request every single time the user hits a key. You want to wait a little bit for the user to calm down and stop typing, that's the moment when the user runs out of ideas to type and is waiting for some suggestion. It's also very useful little trick to reduce the network traffic and processing required to provide this little service.
 
-An other example could be some kind of mouse position tracking system, that tracks where the user is "resting" the cursor, so you only want to receive some notification if the user didn't move the mouse for like one second.
+Another example could be some kind of mouse position tracking system, that tracks where the user is "resting" the cursor, so you only want to receive some notification if the user didn't move the mouse for like one second.
 
-The operators behavior is that it will always emmit the very last element before the "rest time" and it will just simply ignore the other events (events that were followed by an other event "too soon").
+The operators’ behaviour is that it will always emit the very last element before the "rest time" and it will just simply ignore the other events (events that were followed by another event "too soon").
 
 The following example shows the throttling of `KeyDown` event:
 
@@ -1749,11 +1749,11 @@ var source = Observable
 
 #### Sample
 
-If you know how analog-to-digital conversion works for video and audio recording (or recording pretty much any signal over time to be honest), then you know what sampling is. You have some kind of event source that emmits events continously, but you don't have the capacity to process all of that, so you choose to "sample" that event every millisecond or every second or so. When you see the metadata for an audio file saying it's sample rate is 44kHz, it means that the original recording was done by recording the actual airpressure with a microphone 44.000 times a second.
+If you know how analog-to-digital conversion works for video and audio recording (or recording pretty much any signal over time to be honest), then you know what sampling is. You have some kind of event source that emits events continuously, but you don't have the capacity to process all of that, so you choose to "sample" that event every millisecond or every second or so. When you see the metadata for an audio file saying it's sample rate is 44kHz, it means that the original recording was done by recording the actual air pressure with a microphone 44.000 times a second.
 
-Or to turn back to the mouse tracking example, you might not want to just record the "resting" positions, you want more, but not MUCH more, like recording the mouse position with a 125Hz refresh rate (that is the default for USB mouses), but more like the actual position in every 500 or so.
+Or to turn back to the mouse tracking example, you might not want to just record the "resting" positions, you want more, but not MUCH more, like recording the mouse position with a 125Hz refresh rate (that is the default for USB mice), but more like the actual position in every 500 or so.
 
-Similarly to the `Throttle()` operator, the `Sample()` operator only captures the preceeding event before the sampling and ignores the rest that occures between.
+Similarly to the `Throttle()` operator, the `Sample()` operator only captures the preceding event before the sampling and ignores the rest that occurs between.
 
 ```csharp
 var source = Observable
@@ -1764,7 +1764,7 @@ var source = Observable
 
 ![](Marble%20Diagrams/Sample.png)
 
-As with the `Delay()` operator, you can also provide an other `IObservable<object>` as a "signaling stream", meaning whenever the signaling stream emmits an event, it takes a sample from the original event source. Again the actual data flowing on this signaling stream doesn't matter, hence the `object` generic type parameter.
+As with the `Delay()` operator, you can also provide another `IObservable<object>` as a "signalling stream", meaning whenever the signalling stream emits an event, it takes a sample from the original event source. Again the actual data flowing on this signalling stream doesn't matter, hence the `object` generic type parameter.
 
 ### Error handling
 
@@ -1788,9 +1788,9 @@ As with a couple of other operators previously, it's possible to provide a funct
 
 #### Retry
 
-The `Retry()` operator is really simple. If the source stream fails (produces an OnError event), it will resubscribe infinite or a given amount of times.
+The `Retry()` operator is really simple. If the source stream fails (produces an OnError event), it will re-subscribe infinite or a given amount of times.
 
-Let's assum you have some failing service call (`RandomlyFailingService()` in the example) that you would like retry 3 times before completely giving up. It would look something liek this:
+Let's assume you have some failing service call (`RandomlyFailingService()` in the example) that you would like retry 3 times before completely giving up. It would look something like this:
 
 ```csharp
 var source = Observable
@@ -1802,7 +1802,7 @@ Extremely important piece of detail is that you should never ever convert a `Tas
 
 #### OnErrorResumeNext
 
-With the `OnErrorResumeNext()` operator you can silently swallow an error and seamlessly redirect the subscribtion to an other stream. Could be a good example for this to try to download something from multiple mirrors. If one fails, try the next one.
+With the `OnErrorResumeNext()` operator you can silently swallow an error and seamlessly redirect the subscription to another stream. It could be a good example for this to try to download something from multiple mirrors. If one fails, try the next one.
 
 To demonstrate this you can set up two observables (of the same type) and then connect them with this operator.
 
@@ -1854,7 +1854,7 @@ var source = Observable
 
 #### Repeat
 
-The `Repeat()` operator is very similar to the `Retry()` with the minor difference that it re-subscribes to the underlying stream automatically once it *succesfully* finished. Just like with `Retry()` you can choose to repeat in an infinite loop or to only repeat just a given number of times.
+The `Repeat()` operator is very similar to the `Retry()` with the minor difference that it re-subscribes to the underlying stream automatically once it *successfully* finished. Just like with `Retry()` you can choose to repeat in an infinite loop or to only repeat just a given number of times.
 
 #### DoWhile
 
@@ -1868,18 +1868,18 @@ With the `Do()` operator you have the chance to inspect the stream at any point 
 
 #### Materialize / Dematerialize
 
-With `Materialize()` you can capture all channels into a single (and by the way serialisable) object. This is great for monitoring purposes, or when you have different parts of your Rx pipeline running on different machines and somewhere in the middle of the pipeline you have to move data over the internet.
+With `Materialize()` you can capture all channels into a single (and by the way serializable) object. This is great for monitoring purposes, or when you have different parts of your Rx pipeline running on different machines and somewhere in the middle of the pipeline you have to move data over the internet.
 
-It packs the whole stream, with all of it's channels into a `Notification<T>` object. It has a couple of properties, none of them should be too surprising though. 
+It packs the whole stream, with all of its channels into a `Notification<T>` object. It has a couple of properties; none of them should be too surprising though. 
 * a property named `Kind` of type `NotificationKind` enumeration with the possible values of `OnNext`, `OnError` and `OnCompleted`
 * a pair of properties, `HasValue` (`bool`) and `Value` (`T`)
 * and an `Exception` property of type `Exception`
 
-Using this operator will come with some "sideeffects".
+Using this operator will come with some "side-effects".
 
 * **OnNext** will work as expected<br/>
 `OnNext -> Notification(OnNext)`
-* when recieving an **OnCompleted**, it will produce an event containing a `Notification` with `Kind` being `OnCompleted`, and then it will actually terminate the stream with a real OnCompleted event <br/>
+* when receiving an **OnCompleted**, it will produce an event containing a `Notification` with `Kind` being `OnCompleted`, and then it will actually terminate the stream with a real OnCompleted event <br/>
 `OnCompleted -> Notification(OnCompleted) + OnCompleted`
 * and in case of **OnError**, it will produce an event containing a `Notification` with `Kind` being `OnError`, and then it will terminate the stream with an OnCompleted (not OnError) event<br/>
 `OnError -> Notification(OnError) + OnCompleted`
@@ -1900,7 +1900,7 @@ It also worth mentioning that while you are absolutely free to use these operato
 
 #### SelectMany, Merge and Concat
 
-These operators are really similar, it's just a matter of configuration that differentiates them.
+These operators are really similar; it's just a matter of configuration that differentiates them.
 
 ##### SelectMany
 
@@ -1914,7 +1914,7 @@ This particular operator offers a huge amount of overloads but the basic idea is
 
 A simplified version of this is the `Merge()` operator that has only 2 overloads and it will only do the "merging" part of the `SelectMany()` operator. It will just take a couple of already existing (but not necessarily active) streams and merge them (in contrary to the `SelectMany()` that creates the many streams as part of its logic).
 
-The `Merge()` operator has an overload where you can specify a number that will limit the maximum number of concurrent subscribtions to the underlying sub-streams.
+The `Merge()` operator has an overload where you can specify a number that will limit the maximum number of concurrent subscriptions to the underlying sub-streams.
 
 You can also think about the connection between `SelectMany()` and `Merge()` in a way that you can represent the functionality of `SelectMany()` with the combination of the `Select()` and `Merge()` operators.
 
@@ -1963,7 +1963,7 @@ source1.OnNext(3);
 
 The second version of the "order based" join is when you are interested in the combination of the latest events on all streams every time any of the streams produces a new event.
 
-A typical example for this would be to keep track of the key (or keys) pressed on the keyboard at the time the user clicks with their mouse. Depending on whether they pressed the CTRL or ALT or SHIFT or none of them (or a combination of those), you might have to do different things (selection, scaling, panning, etc.). I will not show such a complicated logic here, I will just reach for some subjects again to manually push events to demonstrate how the operator works.
+A typical example for this would be to keep track of the key (or keys) pressed on the keyboard at the time the user clicks with their mouse. Depending on whether they pressed the CTRL, ALT, SHIFT or none of them (or a combination of those), you might have to do different things (selection, scaling, panning, etc.). I will not show such a complicated logic here, I will just reach for some subjects again to manually push events to demonstrate how the operator works.
 
 ```csharp
 var source1 = new Subject<int>();
@@ -1987,7 +1987,7 @@ The `Amb()` and `Switch()` operators are designed to receive multiple streams an
 
 ##### Amb
 
-The `Amb()` will receive many streams, subscribe to them and wait for the first one to emmit an event and keep only that stream and throw away the rest of the streams.
+The `Amb()` will receive many streams, subscribe to them and wait for the first one to emit an event and keep only that stream and throw away the rest of the streams.
 
 ```csharp
 var source1 = Observable
@@ -2032,13 +2032,13 @@ The result will look something like this:
 
 #### Window and Buffer
 
-The `Window()` operator will take the source stream and based on the various parameterisation it will open windows over the original stream that we can subscribe to. It can be parameterised in a way to create windows of n elements, or windows of x seconds, or windows of x seconds with a maximum of n elements, but you can alsotake more control over the opening and closing of windows by providing other streams as "signal streams" to close the existing and open a new window or to have overlapping windows opened by some event and closed by a connecting event. Like opening windows by pressing A, B or C and closing them by pressing 1, 2 or 3 but A will be closed by 1, B by 2 and C by 3.
+The `Window()` operator will take the source stream and based on the various parameterisation it will open windows over the original stream that we can subscribe to. It can be parameterised in a way to create windows of n elements, or windows of x seconds, or windows of x seconds with a maximum of n elements, but you can also take more control over the opening and closing of windows by providing other streams as "signal streams" to close the existing and open a new window or to have overlapping windows opened by some event and closed by a connecting event. Like opening windows by pressing A, B or C and closing them by pressing 1, 2 or 3 but A will be closed by 1, B by 2 and C by 3.
 
 As Window produces an `IObservable<IObservable<T>>`, you will have to have some kind of strategy to flatten this nested hierarchy of observables by using `Merge()`, `Concat()`, `Switch()` or something custom.
 
 The `Buffer()` operator is very similar to the `Window()` but it won't make the individual windows available as observable streams, instead it waits for them to close and returns their content as a collection, so you will get an `IObservable<IEnumerable<T>>`. You would probably do some kind of mathematical operation on this collection of events to summarize that window.
 
-As long as you are using these operators with their basic overloads and cover predictable windows over the original datasource, I think it can be very useful especially for analytical/statistical purposes. Though an important note to mention is that there is no metadata (like a reference to the opening event for example) stored with either the sub-streams in case of the `Window()` or the collections in case of the `Buffer()` that would identify that particular window. So if you go crazy with opening and closing overlapping windows, well, good luck figuring out which window belongs to which pair of events.
+As long as you are using these operators with their basic overloads and cover predictable windows over the original data source, I think it can be very useful especially for analytical/statistical purposes. Though an important note to mention is that there is no metadata (like a reference to the opening event for example) stored with either the sub-streams in case of the `Window()` or the collections in case of the `Buffer()` that would identify that particular window. So if you go crazy with opening and closing overlapping windows, well, good luck figuring out which window belongs to which pair of events.
 
 #### Scan and Aggregate
 
@@ -2046,7 +2046,7 @@ These operators let you go through each event of a stream, holding some accumula
 
 For example for a numerical stream you can choose to collect all elements into a list. In this case a list is the accumulator and you just add the new numbers to it as they appear in the stream. Or you can do something more useful and do min or max selection (though you have explicit operators for that), or add up all the numbers.
 
-The difference between the `Scan()` and `Aggregate()` operators is similar to the difference between the `Window()` and `Buffer()` in a way that `Scan()` is kind of a real time operator that emmits all the subsequent results of the aggregation as new events appear in the source stream, while the `Aggregate()` will only emmit the final result of the aggregation right after the original stream completes.
+The difference between the `Scan()` and `Aggregate()` operators is similar to the difference between the `Window()` and `Buffer()` in a way that `Scan()` is kind of a real time operator that emits all the subsequent results of the aggregation as new events appear in the source stream, while the `Aggregate()` will only emit the final result of the aggregation right after the original stream completes.
 
 Here you can see two examples to sum numbers using the `Scan()` and `Aggregate()` operators.
 
@@ -2072,7 +2072,7 @@ With the `GroupBy()` operator you can specify a key selector function that would
 
 You will end up with an `IObservable<IGroupedObservable<T>>`, where the `IGroupedObservble<T>`'s only difference compared to the basic `IObservable<T>` is that is has a `Key` property, so you know which group it is.
 
-To demonstrate it with a very simple example you will devide numbers to 2 partitions: odd and even.
+To demonstrate it with a very simple example you will divide numbers to 2 partitions: odd and even.
 
 ```csharp
 var source = Observable
@@ -2105,9 +2105,9 @@ var source = Observable
 
 Schedulers are a core part of Rx. When you are building complicated pipelines, in special cases you might want greater control over the execution of parts of the pipeline. By default Rx is single threaded and it won't start spawning threads for you, though it's very much likely that the actual asynchronous code you wrap and use as part of your pipeline will execute its logic on background thread(s).
 
-If you have a piece of code that is resource intensive and you want to parallelise it, you can explicitly specify this need using a scheduler. Or if it's the opposite way and you want that piece of code to be executed on the same thread and/or immediately, again, schedulers are going to be your good friends. Or an other great example for being explicit about the execution policy of your code is when you have to manipulate the UI and you have to marshall the execution to the UI thread.
+If you have a piece of code that is resource intensive and you want to parallelise it, you can explicitly specify this need using a scheduler. Or if it's the opposite way and you want that piece of code to be executed on the same thread and/or immediately, again, schedulers are going to be your good friends. Or another great example for being explicit about the execution policy of your code is when you have to manipulate the UI and you have to marshall the execution to the UI thread.
 
-Schedulers are not just about threading though. In Rx you could see many examples for timing. Schedulers give the whole Rx system the sense of time. Every single Rx operator depends on it's scheduler's clock and not on the system provided static `DateTime.Now`. Thanks to this you can be in explicit control of the time which can come handy when you are writing tests for your pipeline, you can speed things up and make a pipeline with lots of timings unittestable.
+Schedulers are not just about threading though. In Rx you could see many examples for timing. Schedulers give the whole Rx system the sense of time. Every single Rx operator depends on its scheduler's clock and not on the system provided static `DateTime.Now`. Thanks to this you can be in explicit control of the time which can come handy when you are writing tests for your pipeline, you can speed things up and make a pipeline with lots of timings unit testable.
 
 ### The high level anatomy of schedulers
 
@@ -2132,7 +2132,7 @@ public interface IScheduler
 }
 ```
 
-With the `Now` property you can get some insight on the scheduler's notion of current time (which is mostly going to be interesting when you are writing unit tests), and three overloads of the `Schedule()` method for scheduling the execution of some action "immediately" or some time later in the future specified either by a realtive (`TimeSpan`) or an absolute (`DateTimeOffset`) time.
+With the `Now` property you can get some insight on the scheduler's notion of current time (which is mostly going to be interesting when you are writing unit tests), and three overloads of the `Schedule()` method for scheduling the execution of some action "immediately" or sometime later in the future specified either by a relative (`TimeSpan`) or an absolute (`DateTimeOffset`) time.
 
 ### Types of schedulers
 
@@ -2140,7 +2140,7 @@ You will likely never have to actually implement a scheduler, but you should jus
 
 #### ImmediateScheduler
 
-With the `ImmediateScheduler` you can execute your logic immediately (synchronously) on the currently executing thread. This is basically forcing the execution to happen right now. Usually considering Rx has a lightweight "thread-free" execution model, it's not really adviced to be used. You can find it by referring to the `ImmediateScheduler.Instance` static property.
+With the `ImmediateScheduler` you can execute your logic immediately (synchronously) on the currently executing thread. This is basically forcing the execution to happen right now. Usually considering Rx has a lightweight "thread-free" execution model, it's not really advised to be used. You can find it by referring to the `ImmediateScheduler.Instance` static property.
 
 #### CurrentThreadScheduler
 
@@ -2148,11 +2148,11 @@ The next scheduler in the line is the `CurrentThreadScheduler` which can be foun
 
 #### TaskPoolScheduler and NewThreadScheduler
 
-If you want to make sure the execution will happen on a background thread, you can use the `TaskPoolScheduler` (`TaskPoolScheduler.Default`) which uses the TPL `TaskFactory` to schedule operations on the thread pool (very important that this is going to use a thread **pool** behind the scenes), or the `NewThreadScheduler` (`NewThreadScheduler.Default`) which will forcibly start a new thread for execution (which is not adviced to use because creating threads is expensive and creating too much will actually have a negative effect on the performance).
+If you want to make sure the execution will happen on a background thread, you can use the `TaskPoolScheduler` (`TaskPoolScheduler.Default`) which uses the TPL `TaskFactory` to schedule operations on the thread pool (very important that this is going to use a thread **pool** behind the scenes), or the `NewThreadScheduler` (`NewThreadScheduler.Default`) which will forcibly start a new thread for execution (which is not advised to use because creating threads is expensive and creating too much will actually have a negative effect on the performance).
 
 #### ThreadPoolScheduler and CoreDispatcherScheduler (UWP)
 
-If you are building an UWP application, you can also use the WinRT `ThreadPool` with `ThreadPoolScheduler.Default`, and you will also have a special scheduler to marshall work to the UI thread, the `CoreDispatcherScheduler` (`CoreDispatcherScheduler.Current`), which is used so commonly that it even has it's own extensionmethod: `ObserveOnDispatcher()`.
+If you are building an UWP application, you can also use the WinRT `ThreadPool` with `ThreadPoolScheduler.Default`, and you will also have a special scheduler to marshall work to the UI thread, the `CoreDispatcherScheduler` (`CoreDispatcherScheduler.Current`), which is used so commonly that it even has its own extension method: `ObserveOnDispatcher()`.
 
 #### DefaultScheduler (will use the default thread pool for the platform)
 
@@ -2162,7 +2162,7 @@ There's also a helper scheduler to schedule work on the available system `Thread
 
 Using schedulers can either be done by just simply passing an instance of it to the operator if it supports that kind of overload, or to make it more explicit without messing up the parameterisation of the operators, you can use the `ObserveOn()` or the `SubscribeOn()` extension methods explicitly.
 
-With the `SubscribeOn()` you can define where the *subscribtion* should happen, which would likely mean the execution of some asynchronous operation that you encapsulate with the `Observable.FromAsync()` operator or one of the other generator operators.
+With the `SubscribeOn()` you can define where the *subscription* should happen, which would likely mean the execution of some asynchronous operation that you encapsulate with the `Observable.FromAsync()` operator or one of the other generator operators.
 
 On the other hand the `ObserveOn()` operator will define where the notifications (OnNext, OnCompleted, OnError) are executed going forward in the pipeline.
 
@@ -2170,13 +2170,13 @@ It would be a good example to consider a client side application where you have 
 
 ### Testing
 
-It's great that you have Rx in your disposal to handle all kinds of asynchronous and timed workflows and declaratively specify your threading strategy, but at some point you have to test what you built, to make sure it does what you think it should do. And I'm pretty sure you don't want to wait a minute in a unit test to figure out whether your timeout/retry logic works or not. Do you remember when I said Rx's notion of time relies on the scheduler it is using? This is an other point where the concept of shcedulers comes extremely handy.
+It's great that you have Rx in your disposal to handle all kinds of asynchronous and timed workflows and declaratively specify your threading strategy, but at some point you have to test what you built, to make sure it does what you think it should do. And I'm pretty sure you don't want to wait a minute in a unit test to figure out whether your timeout/retry logic works or not. Do you remember when I said Rx's notion of time relies on the scheduler it is using? This is another point where the concept of schedulers comes extremely handy.
 
-There is a spetial type of scheduler, the `HistoricalScheduler` that basically gives you the ability to speed up time, so that all the timed events will happen immediately.
+There is a special type of scheduler, the `HistoricalScheduler` that basically gives you the ability to speed up time, so that all the timed events will happen immediately.
 
 You can either use the absolutely manual way of adjusting the scheduler's clock by using the `AdvanceBy()` or `AdvanceTo()` methods to advance the clock by a relative amount of time or advance it to an absolute time, or you can just call the `Start()` method to run the scheduler until it has any scheduled elements.
 
-To demonstrate this here is an example to test a piece of pipeline that would normally take a minute to run, but in a unittest it will finish in the fraction of a second.
+To demonstrate this here is an example to test a piece of pipeline that would normally take a minute to run, but in a unit test it will finish in the fraction of a second.
 
 ```csharp
 // Arrange
@@ -2211,12 +2211,12 @@ scheduler.Start();
 
 // Assert
 if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
-    Console.WriteLine("The test was successfull");
+    Console.WriteLine("The test was successful");
 else
     Console.WriteLine("The test failed");
 ```
 
-Plus the helper class to tompare the expected and real values:
+Plus the helper class to compare the expected and real values:
 
 ```csharp
 private class TestDataEqualityComparer : IEqualityComparer<Timestamped<long>>
@@ -2241,7 +2241,7 @@ This code requires some quick remarks.
 
 As you could notice, all the schedulers are singletons, and so should your `TestScheduler` or `HistoricalScheduler` be. Always share the same instance of the scheduler between each operator in your pipeline. In a real-world scenario you would just use some dependency-injected `IScheduler` objects in your logic, and in production you would set real schedulers for those, and in test you would set a `TestScheduler` or `HistoricalScheduler`.
 
-When it makes sense (it's not always the case) you should do assertions on events by specifying their expected value and time of occurance in the stream. To achieve this it's worth saving the date and time at the beginning of the test (and set this as the initial state of the test scheduler's clock) and use the `TimeStamp()` operator to tag each event with it's "birth date" (according to the scheduler of course) and make the assertion on these `TimeStamped<T>` objects. When you make assertion on time stamps, you should make "close to" assertions instead of equality checks, because those dates will never be exactly the same. It worth mentioning that this example is a very naive (or verbose) approach to do the setup and the assertion, you could write some generic helper methods to help you with the "boilerplate" so your test code can be more compact and can focus on the important things.
+When it makes sense (it's not always the case) you should do assertions on events by specifying their expected value and time of occurrence in the stream. To achieve this it's worth saving the date and time at the beginning of the test (and set this as the initial state of the test scheduler's clock) and use the `TimeStamp()` operator to tag each event with its "birth date" (according to the scheduler of course) and make the assertion on these `TimeStamped<T>` objects. When you make assertion on time stamps, you should make "close to" assertions instead of equality checks, because those dates will never be exactly the same. It worth mentioning that this example is a very naive (or verbose) approach to do the setup and the assertion, you could write some generic helper methods to help you with the "boilerplate" so your test code can be more compact and can focus on the important things.
 
 ## Rx + Async
 
@@ -2253,7 +2253,7 @@ But what does it mean to `await` an `IObservable`? A stream can have many events
 
 The answer is: it's going to be the last element. It's like implicitly calling the `LastAsync()` operator on the stream. 
 
-Let's see a couple of simple examples to give you an idea of what can you achieve with Rx and the `await` keyword.
+Let's see a couple of simple examples to give you ideas of what can you achieve with Rx and the `await` keyword.
 
 If you have been converting a `Task` into an Rx stream for the sake of adding timeout and retry logic to it, at the end it will still return you one event or an exception, so it's directly suitable to just `await` as is. 
 
@@ -2307,7 +2307,7 @@ catch (Exception ex)
 }
 ```
 
-An other thing to consider is to use Rx schedulers in your imperative code.
+Another thing to consider is to use Rx schedulers in your imperative code.
 
 For example when you would normally write something like 
 

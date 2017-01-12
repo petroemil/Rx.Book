@@ -847,7 +847,7 @@ namespace RxSamples
 
             // Assert
             if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
-                Console.WriteLine("The test was successfull");
+                Console.WriteLine("The test was successful");
             else
                 Console.WriteLine("The test failed");
         }
