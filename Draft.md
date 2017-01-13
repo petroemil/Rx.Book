@@ -331,14 +331,11 @@ The goal is to build a search page where as the users are typing their query, th
 
 An interesting side fact: when you are using a real search engine (like Bing), the suggestions you are getting are just a result of some smart matching of words, but doesn't necessarily represent an actual result. It's very much possible that the search engine will help you phrase the perfect query by giving you some amazing suggestions, and then it won't find anything related to what you wanted. So long story short, suggestions and results are different things, but suggestions in real life are built based on statistical data from other users' queries and indexed websites and some intelligence to just suggest matching words to your existing query, so they can still be absolutely useful.
 
-let's start building the app logic with a naive implementation and find the potential problems in it.
+Let's start building the app logic with a naive implementation and find the potential problems in it.
 
-Put the following Code Sample in the constructor of the main page and try it in action.
+Put the following code block in the constructor of the main page and try it in action.
 
 ```csharp
-// Code Sample 2-6
-// Overly simplified, naive approach for the search page
-
 this.searchBox.TextChanged += async (s, e) => 
 {
     var query = this.searchBox.Text;
@@ -377,18 +374,12 @@ Let's take a look at the individual problems then to a solution to combine them.
 Thanks to the `await` keyword introduced in C# 5.0, you can write short and easy to read asynchronous code. The *raw* service call is just one line of code...
 
 ```csharp
-// Code Sample 2-7
-// Using the await keyword to make an asynchronous call
-
 var suggestions = await this.searchService.GetSuggestionsForQuery(query);
 ```
 
 ... but as soon as you want something a little bit more difficult, you have to leave the comfort of this simplicity and start writing code. A possible implementation for the timeout logic can be seen below.
 
 ```csharp
-// Code Sample 2-8
-// Implementation of timeout
-
 private readonly TimeSpan timeoutInterval = TimeSpan.FromMilliseconds(500);
 public async Task<IEnumerable<string>> ServiceCall_Timeout(string query)
 {
@@ -402,16 +393,13 @@ public async Task<IEnumerable<string>> ServiceCall_Timeout(string query)
 }
 ```
 
-You start the service call and a delay in parallel and wait for one of them to return. Based on which one returned first you can decide if the operation finished successfully (or failed for some other reason), or timed out.
+You start the service call and a `Delay` in parallel and wait for one of them to return. Based on which one returned first you can decide if the operation finished successfully (or failed for some other reason), or timed out.
 
 ### Retry
 
-Retry logic usually involves some kind of loop, trying an operation over and over again n times. Again, the `await` keyword saves quite a lot of code as you can use await within a `for` or `while` loop, but you have to write some code to make it happen. Here is a possible implementation.
+Retry logic usually involves some kind of loop, trying an operation over and over again n times. Again, the `await` keyword saves quite a lot of code as you can use `await` within a `for` or `while` loop, but you have to write some code to make it happen. Here is a possible implementation.
 
 ```csharp
-// Code Sample 2-9
-// Implementation of retry
-
 private readonly int numberOfRetries = 3;
 public async Task<IEnumerable<string>> ServiceCall_Retry(string query)
 {
@@ -443,14 +431,9 @@ And the race condition check will throw away some of the old service calls in ca
 
 This leads to a pattern where the service call wrapping method will no longer directly return anything, it will turn into a `void` method, and instead you will be able to get the most recent results through a CallBack event.
 
-Throttling works in a simple way: You save the current `DateTime` into an instance level field, wait some time (half second) and check if the time difference between the saved and the new current `DateTime` is equals or more than the specified throttling interval. If it is, it means that no one called this method until it was waiting (otherwise the difference between the saved and current `DateTime` would be less than the specified throttle interval), so it can advance forward and do the service call, and send the result of the call through the CallBack event.
-
-The following Code Sample shows the implementation.
+Throttling works in a simple way: You save the current `DateTime` into an instance level field, wait some time (half second) and check if the time difference between the saved and the new current `DateTime` is equals or more than the specified throttling interval. If it is, it means that no one called this method while it was waiting (otherwise the difference between the saved and current `DateTime` would be less than the specified throttle interval), so it can advance forward and do the service call, and send the result of the call through the CallBack event.
 
 ```csharp
-// Code Sample 2-10
-// Implementation of throttle
-
 private readonly TimeSpan throttleInterval = TimeSpan.FromMilliseconds(500);
 private DateTime lastThrottledParameterDate;
 public event Action<IEnumerable<string>> CallBack_Throttle;
@@ -471,9 +454,6 @@ public async void ServiceCall_Throttle(string query)
 As described before, distinction check has a very simple logic: only do the service call if the query is different from the previous one.
 
 ```csharp
-// Code Sample 2-11
-// Implementation of distinction check
-
 private string lastDistinctParameter;
 public event Action<IEnumerable<string>> CallBack_Distinct;
 public async void ServiceCall_Distinct(string query)
@@ -498,9 +478,6 @@ If they don't match though, it means that another service call has been made whi
 In this specific example you won't have to actually explicitly tag the service calls with some kind of `Guid`, you can just use the `Task` object's reference that represents the service call.
 
 ```csharp
-// Code Sample 2-12
-// Implementation of race condition handling
-
 private Task<IEnumerable<string>> lastCall;
 public event Action<IEnumerable<string>> CallBack_RaceCondition;
 public async void ServiceCall_RaceCondition(string query)
@@ -517,12 +494,9 @@ public async void ServiceCall_RaceCondition(string query)
 
 ### All together
 
-Now, that you have an idea about the individual pieces, let's try to put them together and see how the resulting implementation can actually be used.
+Now, that you have an idea about the individual pieces, let's try to put them together and also see how the resulting implementation can actually be used.
 
 ```
-// Code Sample 2-13
-// Combined implementation of timeout, retry, throttle, distinction check and race condition handling
-
 public class ServiceCallWrapper<TParam, TResult>
 {
     private readonly Func<TParam, Task<TResult>> wrappedServiceCall;
@@ -613,13 +587,9 @@ public class ServiceCallWrapper<TParam, TResult>
 Even though this implementation is not quite pretty on the inside, using it is fairly simple.
 
 ```csharp
-// Code Sample 2-14
-// Using the ServiceCallWrapper class to get suggestions for queries
-// Triggered by every new character entered into the SearchBox
-
 var suggestionsServiceHelper = new ServiceCallWrapper<string, IEnumerable<string>>(this.searchService.GetSuggestionsForQuery);
 
-// Subscribing to events
+// Subscribing to events to trigger service call
 this.searchBox.TextChanged += (s, e) => suggestionsServiceHelper.ServiceCall(this.searchBox.Text);
 
 // Registering callback methods
@@ -628,13 +598,9 @@ suggestionsServiceHelper.ErrorCallBack += this.ErrorCallBack;
 ```
 
 ```csharp
-// Code Sample 2-15
-// Using the ServiceCallWrapper class to get results for queries
-// Triggered by clicking on the Search Button, clicking on a suggestion or hitting the Enter key
-
 var resultsServiceHelper = new ServiceCallWrapper<string, IEnumerable<string>>(this.searchService.GetResultsForQuery);
             
-// Subscribing to events
+// Subscribing to events to trigger service call
 this.searchButton.Click += (s, e) => resultsServiceHelper.ServiceCall(this.searchBox.Text);
 this.suggestions.ItemClick += (s, e) => resultsServiceHelper.ServiceCall(e.ClickedItem as string);
 this.searchBox.KeyDown += (s, e) =>
@@ -651,9 +617,6 @@ resultsServiceHelper.ErrorCallBack += this.ErrorCallBack;
 Just for the record the two event handlers for `CallBack` and `ErrorCallBack` have the following implementation in the sample code.
 
 ```csharp
-// Code Sample 2-16
-// Implementation for the callback event handlers
-
 private void CallBack(IEnumerable<string> items)
 {
     this.errorLabel.Visibility = Visibility.Collapsed;

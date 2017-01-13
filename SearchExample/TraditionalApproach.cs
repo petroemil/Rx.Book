@@ -51,7 +51,7 @@ namespace SearchExample
         {
             var suggestionsServiceHelper = new ServiceCallWrapper<string, IEnumerable<string>>(this.searchService.GetSuggestionsForQuery);
 
-            // Subscribing to events
+            // Subscribing to events to trigger service call
             this.searchBox.TextChanged += (s, e) => suggestionsServiceHelper.ServiceCall(this.searchBox.Text);
 
             // Registering callback methods
@@ -62,8 +62,8 @@ namespace SearchExample
         private void InitialiseResults()
         {
             var resultsServiceHelper = new ServiceCallWrapper<string, IEnumerable<string>>(this.searchService.GetResultsForQuery);
-            
-            // Subscribing to events
+
+            // Subscribing to events to trigger service call
             this.searchButton.Click += (s, e) => resultsServiceHelper.ServiceCall(this.searchBox.Text);
             this.suggestions.ItemClick += (s, e) => resultsServiceHelper.ServiceCall(e.ClickedItem as string);
             this.searchBox.KeyDown += (s, e) =>
