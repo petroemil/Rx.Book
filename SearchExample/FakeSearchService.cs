@@ -29,19 +29,26 @@ namespace SearchExample
         {
             await this.SimulateTimeoutAndFail();
 
-            var words = SampleData.GetTop100EnglishWords().Select(x => x.ToLower());
+            // Split "The Quick Brown Fox" to [ "The", "Quick", "Brown" ] and "Fox"
+            var queryWords = query.ToLower().Split(' ');
+            var fixedPartOfQuery = queryWords.SkipLast(1);
+            var lastWordOfQuery = queryWords.Last();
 
-            var wordsOfQuery = query.ToLower().Split(' ');
-            var lastWordOfQuery = wordsOfQuery.Last();
-            var suggestionsForLastWordOfQuery = words.Where(w => w.StartsWith(lastWordOfQuery));
+            // Get all the words from the 'SampleData' 
+            // that starts with the last word fragment of the query
+            var suggestionsForLastWordOfQuery = SampleData
+                .GetTop100EnglishWords()
+                .Select(w => w.ToLower())
+                .Where(w => w.StartsWith(lastWordOfQuery));
 
-            var headOfQuery = "";
-            if (wordsOfQuery.Length > 1)
-            {
-                headOfQuery = String.Join(" ", wordsOfQuery.SkipLast(1));
-            }
-            
-            return suggestionsForLastWordOfQuery.Select(s => $"{headOfQuery} {s}").Take(10);
+            // Combine the "fixed" part of the query 
+            // with the suggestions for the last word fragment
+            var suggestionsToReturn = suggestionsForLastWordOfQuery
+                .Select(s => fixedPartOfQuery.Concat(new[] { s }))
+                .Select(s => string.Join(" ", s))
+                .Take(10);
+
+            return suggestionsToReturn;
         }
     }
 }
