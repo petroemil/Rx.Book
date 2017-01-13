@@ -204,13 +204,13 @@ namespace RxSamples
             var source = Observable.Interval(TimeSpan.FromSeconds(1));
 
             // Subscribe with the 1st observer
-            this.Subscribe(source, "Publish - #1");
+            this.Subscribe(source, "Cold Observable - #1");
 
             // Wait 3 seconds
             await Task.Delay(TimeSpan.FromSeconds(3));
 
             // Subscribe with the 2nd observer
-            this.Subscribe(source, "Publish - #2");
+            this.Subscribe(source, "Cold Observable - #2");
         }
 
         public async void Publish_CallingConnectBeforeTheTwoSubscribtions()
@@ -255,12 +255,12 @@ namespace RxSamples
                 .Select(e => DateTime.Now);
 
             Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
-            this.Subscribe(source, "Replay - #1");
+            this.Subscribe(source, "Hot Observable - #1");
 
             await Task.Delay(TimeSpan.FromSeconds(3));
 
             Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
-            this.Subscribe(source, "Replay - #2");
+            this.Subscribe(source, "Hot Observable - #2");
         }
 
         public async void Replay_CallingConnectBeforeTheTwoSubscribtions()

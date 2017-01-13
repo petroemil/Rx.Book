@@ -750,7 +750,7 @@ In the next chapter you will learn about the depth of Rx, the concepts behind it
 
 Just for the sake of having an app that you can use to play with and run the code samples, let's create a UWP "Console" application. The reason for it is that most of the time a traditional console where you can print lines is more than enough, but for some of the examples you will need things like a `TextBox` or pointer events.
 
-Just like in the previous chapter, let's create an empty UWP app...
+Just like in the previous chapter, let's create an empty UWP app
 * Open Visual Studio (2015)
 * Create a new project (`File / New / Project`)
 * In the dialog window select `Windows / Universal` on the left hand pane
@@ -761,9 +761,6 @@ Just like in the previous chapter, let's create an empty UWP app...
 This extension method will allow you to write on the screen line-by-line and it will always keep only the last 25 lines.
 
 ```csharp
-// Code Sample 3-1
-// Extension method for the TextBlock class
-
 public static class TextBlockExtensions
 {
     public static void WriteLine(this TextBlock textBlock, object obj)
@@ -778,12 +775,9 @@ public static class TextBlockExtensions
 }
 ```
 
-* The next step is to create the UI. It will be very simple just a `TextBlock` and some styling to make it look console-like
+* The next step is to create the UI. It will be very simple just a `TextBlock` and some styling to make it look like a console
 
 ```XML
-// Code Sample 3-2
-// UWP Console app UI
-
 <Grid Background="Black">
     <TextBlock x:Name="Console" Margin="25" FontFamily="Consolas" FontSize="24" Foreground="LightGray" IsTextSelectionEnabled="True" />
 </Grid>
@@ -792,9 +786,6 @@ public static class TextBlockExtensions
 * With the `TextBlock` and the extension method defined, you can now write things like this in the page's code behind file
 
 ```csharp
-// Code Sample 3-3
-// Sample usage of the extension method on the TextBlock
-
 Console.WriteLine("Hello Rx");
 ```
 
@@ -804,9 +795,9 @@ As you could already see it in the previous chapters, Rx at it's core gives you 
 
 Just as a recap, the core interfaces are the `IObservable<T>` and `IObserver<T>`.
 
-The `IObservalbe<T>` as an observable object gives you the ability to subscribe to it and "observe it" through its only method, the `Subscribe()`.
+The `IObservalbe<T>` ss an observable object gives you the ability to subscribe to it and "observe it" through its only method, the `Subscribe()`.
 
-The `IObserver<T>` interface defines how the observer object looks like. It has an `OnNext()` method that will be called every time the observable emits a new event (so 0 or more times), and `OnError()` and `OnCompleted()` methods that will be called when the observer terminates, either naturally or due to an error. These latter two methods are terminating methods and they can be called 0 or 1 time during the lifecycle of an observable object. They are also mutually exclusive, meaning you can't see both of them coming emitted by the same observable.
+The `IObserver<T>` interface defines how the observer object looks like. It has an `OnNext()` method that will be called every time the observable emits a new event (so 0 or more times), and `OnError()` and `OnCompleted()` methods that will be called when the observer terminates, either naturally or due to an error. These latter two methods are terminating methods and they can be called 0 or 1 time during the lifecycle of an observable object. They are also mutually exclusive, meaning you can't see both of them emitted by the same observable.
 
 As it's usually "phrased": `OnNext* (OnError | OnCompleted)?`
 
@@ -822,14 +813,11 @@ There are 3 main groups of overloads for the `Subscribe()` method.
 * Subscribing without passing any parameter - it will make sense later
 * And all of the above with an optional `CancellationToken` parameter
 
-Throughout this book you will use the second one (passing the lambda expressions) as that's the fastest to implement. Obviously in a real application you would want to build your `Observable` object and build a unit test suite around it, something that you can't quite do with inline defined lambda functions.
+Throughout this book you will mostly use the second one (passing the lambda expressions) as that's the fastest to implement. Obviously in a real application you would want to build your `Observable` object and build a unit test suite around it, something that you can't quite do with inline defined lambda functions.
 
 The patter that you should follow for the rest of the examples is the following:
 
 ```csharp
-// Code Sample 3-4
-// Subscribtion example
-
 private void Subscribe<T>(IObservable<T> source, string subscribtionName)
 {
     source
@@ -841,7 +829,7 @@ private void Subscribe<T>(IObservable<T> source, string subscribtionName)
 }
 ```
 
-The `ObserveOnDispatcher()` is required to make sure no matter which thred the stream is coming from, it's definitely marshalled to the UI thread.
+The `ObserveOnDispatcher()` is required to make sure no matter which thread the stream is coming from, it's definitely marshalled to the UI thread.
 
 And the `Subscribe()` method is fairly trivial, you just handle all possible notification types by providing all three of the callbacks for `OnNext`, `OnError` and `OnCompleted`.
 
@@ -853,16 +841,13 @@ They will look something like this:
 
 ### Generator operators
 
-There are a bunch of "primitive streams" that can be easily generated by one of the built-in operators. Some of these represent the most basic variations of streams. These operators can be looked at like `int.MaxValue` / `int.MaxValue`, `Task.FromResult()` / `Task.FromException()` / `Task.FromCancelled()`, `Enumerable.Range()`, etc.
+There are a bunch of "primitive streams" that can be easily generated by one of the built-in operators. Some of these represent the most basic variations of streams. These operators can be looked at like `int.MinValue` / `int.MaxValue`, `Task.FromResult()` / `Task.FromException()` / `Task.FromCancelled()`, `Enumerable.Range()`, etc.
 
 #### Never
 
-The `Never()` operator represents the simplest possible stream, a stream that doesn't do anything, has no value and never ends.
+The `Never()` operator represents the simplest possible stream, a stream that doesn't do anything, has no events and never ends.
 
 ```csharp
-// Code Sample 3-5
-// Using the Never operator
-
 var source = Observable.Never<string>();
 ```
 
@@ -873,9 +858,6 @@ var source = Observable.Never<string>();
 The empty stream is a stream that yields no `OnNext`, just an `OnCompleted` event immediately.
 
 ```csharp
-// Code Sample 3-6
-// Using the Empty operator
-
 var source = Observable.Empty<string>();
 ```
 
@@ -886,9 +868,6 @@ var source = Observable.Empty<string>();
 Similarly to the `Task.FromResult()` you can use the `Observable.Return()` operator to produce a stream that has one `OnNext` and an `OnCompleted` event.
 
 ```csharp
-// Code Sample 3-7
-// Using the Return operator
-
 var source = Observable.Return("A");
 ```
 
@@ -899,9 +878,6 @@ var source = Observable.Return("A");
 Yet again, bringing the analogy from the `Task` world, just like you can use to construct a failed `Task` object using the `Task.FromException()` static method, you can use the `Observable.Throw()` operator to construct a stream that has only one `OnError` event.
 
 ```csharp
-// Code Sample 3-8
-// Using the Throw operator
-
 var source = Observable.Throw<string>(new Exception("X"));
 ```
 
@@ -912,9 +888,6 @@ var source = Observable.Throw<string>(new Exception("X"));
 The same way you can use the `Enumerable.Range()` operator to generate a(n `IEnumerable`) range of numbers by providing a start value and the number of values you want to generate, you can use the `Observable.Range()` operator with the same parameters to generate an `IObservable` stream.
 
 ```csharp
-// Code Sample 3-9
-// Using the Generate operator
-
 var source = Observable.Range(0, 10);
 ```
 
@@ -922,12 +895,9 @@ var source = Observable.Range(0, 10);
 
 #### Generate
 
-Generate works in a very similar way to a traditional `for` loop. You have to provide an initial value, a condition to be checked and an iterator logic. 
+Generate works in a very similar way to a traditional `for` loop. You have to provide an initial value, a condition to be checked and an iterator logic.
 
 ```csharp
-// Code Sample 3-10
-// Using the Generate operator
-
 var source = Observable.Generate(
     initialState: 0,
     condition: i => i < 10,
@@ -948,9 +918,6 @@ It also worth mentioning that this stream never ends.
 If you had some kind of `Timer` based logic in your application before, where you had to do something in every second or minute and you want to convert that to an Rx observable based implementation, this operator is a good starting point.
 
 ```csharp
-// Code Sample 3-11
-// Using the Interval operator
-
 var source = Observable.Interval(TimeSpan.FromMilliseconds(100));
 ```
 
@@ -960,12 +927,9 @@ var source = Observable.Interval(TimeSpan.FromMilliseconds(100));
 
 The `Timer()` operator can work in two different ways.
 
-On one hand you can use it to produce one event with either by providing a `TimeSpan` to produce that event with some delay after subscribing to the observable or by providing a `DateTime` as a parameter in which case the value will appear in the stream at that given time.
+On one hand you can use it to produce one event with either by providing a `TimeSpan` to produce that event with some delay after subscribing to the observable; or by providing a `DateTime` as a parameter in which case the value will appear in the stream at that given time.
 
 ```csharp
-// Code Sample 3-12
-// Using the Timer operator with one parameter
-
 var sourceRelative = Observable.Timer(TimeSpan.FromMilliseconds(500));
 var sourceAbsolute = Observable.Timer(new DateTime(2063, 4, 4));
 ```
@@ -975,9 +939,6 @@ var sourceAbsolute = Observable.Timer(new DateTime(2063, 4, 4));
 On the other hand you can also provide a second `TimeSpan` parameter in which case the stream won't terminate after just one element, but it will keep generating subsequent elements with the specified time between them.
 
 ```csharp
-// Code Sample 3-13
-// Using the Timer operator with two parameters
-
 var source = Observable.Timer(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
 ```
 
@@ -994,25 +955,20 @@ Two very common scenarios are collections and `Task` objects. For these you can 
 If you have some kind of `IEnumerable` datasource, you can just call the extension method on it and turn it into an `IObservable` stream.
 
 ```csharp 
-// Code Sample 3-14
-// Using the ToObservable extension method on a collection
-
 var sourceFromEnumerable = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }.ToObservable();
 ```
 
 ![](Marble%20Diagrams/ToObservable.png)
 
-Also if you have a `Task` object, you can just call the extension method to turn it into a stream.</br>
-Even though the extension method is present and you are free to use it and in some cases it's perfectly fine to use it, I would personally suggest to use the `FromAsync` operator, because it comes with a few important behaviour differences compared to the `ToObservable` operator.
+Also if you have a `Task` object, you can just call the extension method to turn it into a stream.
 
 ```csharp
-// Code Sample 3-15
-// Using the ToObservable extension method on a Task
-
 var sourceFromTask = Task.FromResult("A").ToObservable();
 ```
 
 ![](Marble%20Diagrams/FromAsync.png)
+
+Even though the extension method is present and you are free to use it and in some cases it's perfectly fine to use it, I would personally suggest to use the `FromAsync()` operator, because it comes with a few important behaviour differences compared to the `ToObservable()` operator.
 
 #### FromAsync
 
@@ -1023,9 +979,6 @@ The `ToObservable()` operator can only act on an existing `Task` object. If you 
 But if you use the `FromAsync()` operator that wraps the function itself that produces the `Task`, if you re-subscribe (for example because of a failure), it will actually re-execute the function, producing a new `Task` with that, so at least you have the chance to recover from a transient error.
 
 ```csharp
-// Code Sample 3-16
-// Using the FromAsync operator
-
 var goodExample = Observable.FromAsync(SomeAsyncOperation);
 ```
 
@@ -1068,9 +1021,9 @@ var source = Observable.FromEvent<Action<string, int, double>, Tuple<string, int
 
 So let's see what is happening here.
 
-First of all, you have to be able to call the `FromEvent` operator, which requires 2 generic type parameters, the type of the event and the type of the event arguments. The second one is necessary because in the world of events when an event happens, a subscribed method gets called potentially with many parameters, but in Rx world when an event happens, a new object is placed into the stream. So you have to wrap the received parameters into one object.
+First of all, you have to call the `FromEvent` operator, which requires 2 generic type parameters, the type of the event and the type of the event arguments. The second one is necessary because in the world of events when an event happens, a subscribed method gets called potentially with many parameters, but in Rx world when an event happens, a new object is placed into the stream. So you have to wrap the received parameters into one object.
 
-`void MySpecialEventHandler(string s, int i, double d)` VS `Tuple<string, int, double>`
+`MySpecialEventHandler(string s, int i, double d)` VS `OnNext(Tuple<string, int, double> values)`
 
 Let's see the method parameters. After providing the type of the `event` and the type of the `args`, Rx internally prepares and exposes an `OnNext<TArgs>` method to push new elements into the stream. So here's what's happening:
 
@@ -1088,7 +1041,7 @@ There are real-time data sources, like most (if not all) of the .NET events (`Po
 
 And there are data sources, like an asynchronous method call, that you can still treat as an Rx stream, but you know that the service call will be triggered by your subscription to the (`FromAsync()`) observable stream. You know that any kind of event will only appear in the stream after you subscribed to it, because the subscription triggered the execution of the underlying logic that puts events in the stream.
 
-The aforementioned real-time data sources are called "Hot Observables", and the other group is called "Cold Observables". You can convert easily switch them around by introducing caching for a hot observable, or "broadcasting" the events from the source of a cold observable to all of its subscribers.
+The aforementioned real-time data sources are called "Hot Observables", and the other group is called "Cold Observables". You can easily switch them around by introducing caching for a hot observable, or "broadcasting" the events from the source of a cold observable to all of its subscribers.
 
 #### Creating hot observables
 
@@ -1100,13 +1053,13 @@ To demonstrate this let's create a simple cold observable using the `Interval()`
 var source = Observable.Interval(TimeSpan.FromSeconds(1));
 
 // Subscribe with the 1st observer
-this.Subscribe(source, "#1");
+this.Subscribe(source, "Cold Observable - #1");
 
 // Wait 3 seconds
 await Task.Delay(TimeSpan.FromSeconds(3));
 
 // Subscribe with the 2nd observer
-this.Subscribe(source, "#2");
+this.Subscribe(source, "Cold Observable - #2");
 ```
 
 If you run this, you will see events popping up on your screen from the two subscriptions like this:
@@ -1121,13 +1074,13 @@ var publishedSource = originalSource.Publish();
 
 // Call Connect to activate the source and subscribe immediately with the 1st observer
 publishedSource.Connect();
-this.Subscribe(publishedSource, "#1");
+this.Subscribe(publishedSource, "Publish - #1");
 
 // Wait 3 seconds
 await Task.Delay(TimeSpan.FromSeconds(3));
 
 // Subscribe with the 2nd observer
-this.Subscribe(publishedSource, "#2");
+this.Subscribe(publishedSource, "Publish - #2");
 ```
 
 The code above shows you how to publish a stream and turn it into a hot observable. As you can see you are subscribing to the `publishedSource` and because you immediately call `Connect()` and subscribe with the 1st observable, it will immediately start producing new values. And you can also see that this is a hot observable because after waiting 3 seconds and subscribing the 2nd observable, it will only receive values that have been emitted from the source after the subscription, meaning it will never see the origin of the source.
@@ -1141,14 +1094,14 @@ var originalSource = Observable.Interval(TimeSpan.FromSeconds(1));
 var publishedSource = originalSource.Publish();
 
 // Subscribe to the not-yet-activated source stream with the 1st observer
-this.Subscribe(publishedSource, "#1");
+this.Subscribe(publishedSource, "Publish - #1");
 
 // Wait 3 seconds
 await Task.Delay(TimeSpan.FromSeconds(3));
 
 // Call Connect to activate the source and subscribe with the 2nd observer
 publishedSource.Connect();
-this.Subscribe(publishedSource, "#2");
+this.Subscribe(publishedSource, "Publish - #2");
 ```
 
 The marble diagram for this case looks something like this:
@@ -1170,12 +1123,12 @@ var source = Observable
     .Select(e => DateTime.Now);
 
 Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
-this.Subscribe(source, "#1");
+this.Subscribe(source, "Hot Observable - #1");
 
 await Task.Delay(TimeSpan.FromSeconds(3));
 
 Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
-this.Subscribe(source, "#2");
+this.Subscribe(source, "Hot Observable - #2");
 ```
 
 After running this example, you can clearly see that you only receive events with dates after the date of the subscription.
@@ -1198,12 +1151,12 @@ Console.WriteLine($"Cold stream activated at {DateTime.Now}");
 replayedSource.Connect();
 
 Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
-this.Subscribe(replayedSource, "#1");
+this.Subscribe(replayedSource, "Replay - #1");
 
 await Task.Delay(TimeSpan.FromSeconds(3));
 
 Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
-this.Subscribe(replayedSource, "#2");
+this.Subscribe(replayedSource, "Replay - #2");
 ```
 
 The event timelines will look something like this:
@@ -1223,7 +1176,7 @@ var originalSource = Observable
 var replayedSource = originalSource.Replay();
 
 Console.WriteLine($"Subscribing with #1 observer at {DateTime.Now}");
-this.Subscribe(replayedSource, "#1");
+this.Subscribe(replayedSource, "Replay - #1");
 
 await Task.Delay(TimeSpan.FromSeconds(3));
 
@@ -1231,7 +1184,7 @@ Console.WriteLine($"Cold stream activated at {DateTime.Now}");
 replayedSource.Connect();
 
 Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
-this.Subscribe(replayedSource, "#2");
+this.Subscribe(replayedSource, "Replay - #2");
 ```
 
 Events will only get recorded (and emitted) after the activation of the cold observable.
@@ -1273,7 +1226,7 @@ subject.OnCompleted();
 subject.OnNext("4");
 ```
 
-In this example you will receive the events "2" and "3". You won't receive "1" because it happened before the subscription, and remember, `Subject` is a hot observable, and you also won't receive "4" because it happened after the `OnCompleted` event, which is a terminating event and implicitly disposes the whole stream (or more precisely the connections between the pieces of the stream).
+In this example you will receive the events "2" and "3". You won't receive "1" because `Subject` is a hot observable and it happened before the subscription, and you also won't receive "4" because it happened after the `OnCompleted` event, which is a terminating event and implicitly disposes the whole pipeline (or more precisely the connections between the pieces of the pipeline).
 
 #### ReplaySubject
 
@@ -1326,7 +1279,7 @@ asyncSubject.OnCompleted();
 this.Subscribe(asyncSubject, "AsyncSubject #2");
 ```
 
-The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscription will see the events "3" and "OnCompleted" when (or after) `OnCompeted()` have been called on the subject.
+The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscription will see the events "3" and "OnCompleted" right after `OnCompeted()` have been called on the subject.
 
 ## LINQ
 
