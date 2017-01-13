@@ -1285,7 +1285,7 @@ The `AsyncSubject` only yields anything after it's been terminated, meaning no m
 
 Up until this point in this chapter you were learning about the basics of observables. How to create them, convert existing event sources or use subjects to manually push events into a stream, what kind of characteristics they have, etc.
 
-The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everyday for simple tasks like doing some data transformation on the events, filter them, or more advanced tasks like error handling, combining multiple streams, etc.
+The more interesting part though are the operators, all the things that you can do with these streams. Throughout the remaining part of this chapter you will learn about quite a few operators that you can use in your everydays for simple tasks like doing some data transformation on the events, filter them, or more advanced tasks like error handling, combining multiple streams, etc.
 
 I believe the absolute top two standard LINQ operators are the `Select()` and `Where()`, so let's start with those.
 
@@ -1323,7 +1323,7 @@ var source = Observable
 
 If you try the previous code example, you will notice that it produces many events with the exact same data. 
 
-Let's modify the requirements a little bit. Keep the grid, but let's say you want to be notified each time the user enters into one of these rectangles and you don't want the remaining couple of hundred events stating "the user is in this area", "the user is still in the same area", etc.
+Let's modify the requirements a little bit. Keep the grid, but let's say you want to be notified each time the user enters into one of these rectangles and you don't want the remaining couple of hundred events stating "the user is in this area", "the user is still in the same area"...
 
 For this you can use the `DistinctUntilChanged()` operator, that will only let an event through if it's different from the previous one.
 
@@ -1342,7 +1342,7 @@ There is a stronger version of this operator that you would typically use in a m
 
 #### Skip
 
-While the `Where()` operator works on the whole stream, checks each element against a predicate and decides whether to keep it or not, but it's possible that you might just want to skip elements at the beginning or end of the stream. And this is exactly what you can do with the different variations of the `Skip()` operator.
+While the `Where()` operator works on the whole stream, checks each element against a predicate and decides whether to keep it or not, it's possible that you might just want to skip elements at the beginning or end of the stream. And this is exactly what you can do with the different variations of the `Skip()` operator. The difference is similar to `foreach` + `if` vs `while` loops.
 
 The most simple version lets you specify the number of elements or the duration of time you want to skip at the beginning (with the `Skip()`) or end (with the `SkipLast()`) of the stream.
 
@@ -1445,7 +1445,7 @@ var source = Observable
 
 ### Selectors
 
-In this section you will see some of the operators that you can use to reduce a whole stream to a single element.
+In this section you will see some of the operators that you can use to select a single element from the stream.
 
 All of these operators have 2x2 versions.
 
@@ -1461,7 +1461,7 @@ It also worth mentioning that technically you will see 4 version for each of the
 * OperatorOrDefault
 * OperatorOrDefaultAsync
 
-... but you should NOT use the non-async versions as they are marked obsolete. The problem with them is that they wait for the given element to appear in the stream synchronously, blocking the execution thread, and that would be quite counterproductive considering Rx is a library thats purpose is to make asynchronous programming easier. 
+... but you should NOT use the non-async versions as they are marked obsolete. The problem with them is that they wait for the given element to appear in the stream synchronously, blocking the execution thread, and that would be quite counterproductive considering Rx is a library thats purpose is to make asynchronous programming easier.
 
 #### First
 
@@ -1531,12 +1531,12 @@ var source = Observable
 
 ### Default values
 
-In your application you might need to handle cases if an event source didn't produce (yet) any events. 
+In your application you might need to handle cases if an event source didn't (yet) produce any events. 
 
 #### StartWith
 
 There are basically two ways to "use" Rx. One of them is when you are subscribing to a stream with a long runtime and just handle the events. It's similar kind of use case to traditional .NET events. You just subscribe and the stream might never terminate. <br/>
-In this case you might have a requirement to receive an event immediately after subscribing to the stream even if the source didn't *actually* produced an event. In this scenario you can use the `StartWith()` operator to proactively inject one or more elements to the beginning of the stream that the subscriber will definitely receive right after subscription.
+In this case you might have a requirement to receive an event immediately after subscribing to the stream even if the source didn't *actually* produce an event. In this scenario you can use the `StartWith()` operator to proactively inject one or more elements to the beginning of the stream that the subscriber will definitely receive right after subscription.
 
 ```csharp
 var source = Observable
@@ -1565,7 +1565,7 @@ These operators can be used to test the stream for some kind of condition or aga
 
 #### SequenceEqual
 
-This is a fairly naive way to compare two streams or a stream with a traditional .NET collection. It will only return `true` if the two streams/collections has the same elements in the same order, not more, not less. So they have to match exactly.
+This is a fairly naive way to compare two streams or a stream with a traditional .NET collection. It will only return `true` if the two streams/collections has the same elements in the same order, not more, not less. They have to match exactly.
 
 #### Contains
 
@@ -1599,7 +1599,7 @@ var source = Observable
 
 ![](Marble%20Diagrams/Delay.png)
 
-There is also a way to provide some logic that will be applied to all individual elements in the original stream and calculate the delay for them. The interesting bit here is that you don't get an overload where you can provide a function that receives the actual event and returns a `TimeSpan` or `DateTime`, instead you have to return an `IObservable` that will be used as a "signalling stream": when it produces its first element, the `Delay()` operator will emit the associated event on its output stream.
+There is also a way to provide some logic that will be applied to all individual elements in the original stream and calculate the delay for them. The interesting bit here is that you don't get an overload where you can provide a function that receives the actual event and returns a `TimeSpan` or `DateTime`, instead you have to return an `IObservable<object>` that will be used as a "signalling stream": when it produces its first element, the `Delay()` operator will emit the associated event on its output stream.
 
 In this case it's also possible that your logic will delay the event "n" to a later point in time than the event "n+1", meaning this might mess up the order of your events.
 
@@ -1607,7 +1607,7 @@ There are some other operators where you can use this kind of pattern of providi
 
 #### Throttle
 
-You could already read a little bit about the `Throttle()` operator in the Introduction chapter. Its purpose is to throttle the stream to not produce events too fast. You might want to build an auto-complete TextBox that is hooked to some web service to provide its suggestions, and you would probably not want to send a web request every single time the user hits a key. You want to wait a little bit for the user to calm down and stop typing, that's the moment when the user runs out of ideas to type and is waiting for some suggestion. It's also very useful little trick to reduce the network traffic and processing required to provide this little service.
+You could already read a little bit about the `Throttle()` operator in the Introduction chapter. Its purpose is to throttle the stream to not produce events too fast. You might want to build an auto-complete TextBox that is hooked to some web service to provide its suggestions, and you would probably not want to send a web request every single time the user hits a key. You want to wait a little bit for the user to calm down and stop typing, that's the moment when the user runs out of ideas to type and is waiting for some suggestions. It's also very useful little trick to reduce the network traffic and processing required to provide this service.
 
 Another example could be some kind of mouse position tracking system, that tracks where the user is "resting" the cursor, so you only want to receive some notification if the user didn't move the mouse for like one second.
 
@@ -1628,7 +1628,7 @@ var source = Observable
 
 If you know how analog-to-digital conversion works for video and audio recording (or recording pretty much any signal over time to be honest), then you know what sampling is. You have some kind of event source that emits events continuously, but you don't have the capacity to process all of that, so you choose to "sample" that event every millisecond or every second or so. When you see the metadata for an audio file saying it's sample rate is 44kHz, it means that the original recording was done by recording the actual air pressure with a microphone 44.000 times a second.
 
-Or to turn back to the mouse tracking example, you might not want to just record the "resting" positions, you want more, but not MUCH more, like recording the mouse position with a 125Hz refresh rate (that is the default for USB mice), but more like the actual position in every 500 or so.
+Or to turn back to the mouse tracking example, you might not want to just record the "resting" positions, you want more, but not MUCH more, like recording the mouse position with a 125Hz refresh rate (that is the default for USB mice), but more like the position in every 500ms or so.
 
 Similarly to the `Throttle()` operator, the `Sample()` operator only captures the preceding event before the sampling and ignores the rest that occurs between.
 
@@ -1661,13 +1661,13 @@ var source = Observable
 
 ![](Marble%20Diagrams/Timeout.png)
 
-As with a couple of other operators previously, it's possible to provide a function that will have to return an `IObservable<object>` meaning the next element has to appear in the original stream before that generated `IObservable<object>` stream yields an event.
+As with a couple of other operators previously, it's possible to provide a function that will have to return an `IObservable<object>` meaning the next element has to appear in the original stream before that generated `IObservable<object>` signalling stream yields an event.
 
 #### Retry
 
 The `Retry()` operator is really simple. If the source stream fails (produces an OnError event), it will re-subscribe infinite or a given amount of times.
 
-Let's assume you have some failing service call (`RandomlyFailingService()` in the example) that you would like retry 3 times before completely giving up. It would look something like this:
+Let's assume you have some failing service call (`RandomlyFailingService()` in the example) that you would like to retry 3 times before completely giving up. It would look something like this:
 
 ```csharp
 var source = Observable
@@ -1675,7 +1675,7 @@ var source = Observable
     .Retry(3);
 ```
 
-Extremely important piece of detail is that you should never ever convert a `Task`-returning async call to an Rx stream by calling the `ToObservable()` extension method on it. The reason is, if you properly build a stream using the `FromAsync()` method, it will re-evaluate that little function every time you subscribe to it, re-executing the actual async call. If you call `ToObservable()` on a `Task` it will just have a reference to that `Task` object but if it fails it won't be able to re-execute the operation that returned that `Task`. No matter how many times you (or the `Retry()` operator internally) subscribe to this stream, you will always get the same result or error that the original `Task` holds.
+Very important piece of detail (once again) is that you should never ever convert a `Task`-returning async call to an Rx stream by calling the `ToObservable()` extension method on it. The reason is, if you properly build a stream using the `FromAsync()` method, it will re-evaluate that little function every time you subscribe to it, re-executing the actual async call. If you call `ToObservable()` on a `Task` it will just have a reference to that `Task` object but if it fails it won't be able to re-execute the operation that returned that `Task`. No matter how many times you (or the `Retry()` operator internally) subscribe to this stream, you will always get the same result or error that the original `Task` holds.
 
 #### OnErrorResumeNext
 
@@ -1705,7 +1705,7 @@ var source = source1.OnErrorResumeNext(source2);
 
 #### Catch
 
-The `Catch()` can operator can work in the exact same way as the `OnErrorResumeNext()`, but it can also be used to do more precise exception handling, building up multiple catch cases similarly as you would do it in a traditional `try-catch` expression. You can handle specific types of exceptions and provide the continuation stream based on the exception details.
+The `Catch()` operator can work in the exact same way as the `OnErrorResumeNext()`, but it can also be used to do more precise exception handling, building up multiple catch cases similarly as you would do it in a traditional `try-catch` expression. You can handle specific types of exceptions and provide the continuation stream based on the exception details.
 
 ```csharp
 var source1 = Observable.Throw<int>(new KeyNotFoundException("Problem"));
@@ -1741,7 +1741,7 @@ The `DoWhile()` operator is similar to the `Repeat()`, but it takes a predicate 
 
 #### Do
 
-With the `Do()` operator you have the chance to inspect the stream at any point without modifying it. It's like writing a `Select()` logic that takes an element, doesn't do anything with it but sends some messages to a log and then returns the original element untouched. Actually, it's more than that because with the `Do()` operator you can also inspect the OnError and OnCompleted channels, which comes extremely handy as most of the time what you are really interested in is the `Exception` on the OnError channel.
+With the `Do()` operator you have the chance to inspect the stream at any point without modifying it. It's like writing a `Select()` logic that takes an element, doesn't do anything with it but sends some messages to a log and then returns the original element untouched. But actually, it's better than that because with the `Do()` operator you can also inspect the OnError and OnCompleted channels, which comes extremely handy as most of the time what you are really interested in is the `Exception` on the OnError channel.
 
 #### Materialize / Dematerialize
 
@@ -1761,15 +1761,15 @@ Using this operator will come with some "side-effects".
 * and in case of **OnError**, it will produce an event containing a `Notification` with `Kind` being `OnError`, and then it will terminate the stream with an OnCompleted (not OnError) event<br/>
 `OnError -> Notification(OnError) + OnCompleted`
 
-This operator has a corresponding `Dematerialize()` pair, to unwrap these notifications to "real" messages on the proper channels.
+This operator has a corresponding `Dematerialize()` pair, to unwrap these notifications to "real" events on the appropriate channels.
 
 #### Timestamp
 
-This operator attaches a `DateTimeOffset` timestamp to the events, producing a `Timestamped<T>` object that has a `Timestamp` property of type `DateTimeOffset`, and a `Value` property of type `T`. Unlike the `Materialize()` operator, this one does not come with some kind of "DeTimestamp" operator to unwrap this object, though you can easily write your own operator to achieve this functionality.
+This operator attaches a `DateTimeOffset` timestamp to the events, producing a `Timestamped<T>` object that has a `Timestamp` property of type `DateTimeOffset`, and a `Value` property of type `T`. Unlike the `Materialize()` operator, this one does not come with some kind of "RemoveTimestamp" operator to unwrap this object, though you can easily write your own operator to achieve this functionality.
 
 #### TimeInterval
 
-While the `Timestamp()` operator attaches a `DateTimeOffset` to each event, the `TimeInterval()` operator attaches a `TimeSpan` to the events, representing the time difference between the current and the previous event. It produces a `TimeInterval<T>` object that has an `Interval` property of type `TimeSpan` and a `Value` property of type `T`. Just like the `Timestamp()` operator, the `TimeInterval()` also lacks a "DeTimeInterval" unwrapping operator, but again, it's very easy to write one for yourself.
+While the `Timestamp()` operator attaches a `DateTimeOffset` to each event, the `TimeInterval()` operator attaches a `TimeSpan` to the events, representing the time difference between the current and the previous event. It produces a `TimeInterval<T>` object that has an `Interval` property of type `TimeSpan` and a `Value` property of type `T`. Just like the `Timestamp()` operator, the `TimeInterval()` also lacks a "RemoveTimeInterval" unwrapping operator, but again, it's very easy to write one for yourself.
 
 It also worth mentioning that while you are absolutely free to use these operators in your production environment, they also serve as a great guideline for this kind of functionality and you can also build your very own metadata object that can hold even more data than these built-in ones.
 
@@ -1777,7 +1777,7 @@ It also worth mentioning that while you are absolutely free to use these operato
 
 #### SelectMany, Merge and Concat
 
-These operators are really similar; it's just a matter of configuration that differentiates them.
+These operators are merging multiple streams with different strategies.
 
 ##### SelectMany
 
@@ -1785,7 +1785,7 @@ The `SelectMany()` operator might sound familiar from the traditional LINQ world
 
 The difference in the Rx world compared to the LINQ world is that things are happening asynchronously and in parallel, so what you will get on the resulting stream is a mix of all the sub-streams that you generated (or retrieved) from the events.
 
-This particular operator offers a huge amount of overloads but the basic idea is always the same: have an original "one dimensional" stream, for each event generate/extract some kind of sub-stream (or collection or `Task`) (at this point you have a "two dimensional" stream) and "merge" all these sub-streams into one result stream.
+This particular operator offers a huge amount of overloads but the basic idea is always the same: have an original "one dimensional" stream, for each event generate/extract some kind of sub-stream (or collection or `Task`) (at this point you have a "two dimensional" stream) and "merge" all these sub-streams into a single resulting stream.
 
 ##### Merge
 
@@ -1807,7 +1807,7 @@ This example shows two hot observables using the `Concat()` operator, and as you
 
 #### Zip and CombineLatest
 
-Until this point you have been reading about simple flattening operators that were combining multiple streams into one, but what if you want to do something more complicated, like a join?
+Until this point you have been reading about simple flattening operators that were combining multiple streams into one, but what if you don't just want to blindly merge those events on the different streams but you want to match (or join) them?
 
 Doing traditional LINQ/SQL style join on streams might not be the best idea (though it's obviously not impossible to do). Instead you might be interested in "order based" joins like combining events with the same index from multiple streams (first element on one stream with the first element on the other stream, second with second, third with third, etc.), or always having an up-to-date combination of the latest elements on all streams.
 
@@ -1840,7 +1840,7 @@ source1.OnNext(3);
 
 The second version of the "order based" join is when you are interested in the combination of the latest events on all streams every time any of the streams produces a new event.
 
-A typical example for this would be to keep track of the key (or keys) pressed on the keyboard at the time the user clicks with their mouse. Depending on whether they pressed the CTRL, ALT, SHIFT or none of them (or a combination of those), you might have to do different things (selection, scaling, panning, etc.). I will not show such a complicated logic here, I will just reach for some subjects again to manually push events to demonstrate how the operator works.
+One example for this would be to keep track of the key (or keys) pressed on the keyboard at the time the user clicks with their mouse. Depending on whether they pressed the CTRL, ALT, SHIFT or none of them (or a combination of those), you might have to do different things (selection, scaling, panning, etc.). I will not show such a complicated logic here, I will just reach for some subjects again to manually push events to demonstrate how the operator works.
 
 ```csharp
 var source1 = new Subject<int>();
@@ -1881,7 +1881,7 @@ var source = Observable.Amb(source1, source2);
 
 ##### Switch
 
-In contrary to `Amb()`, `Switch()` always switches to the freshest stream. It doesn't work with a collection of streams, it works on a stream of streams and always only listens to the latest sub-stream. It's a little bit like `Concat()` but it forcibly closes the previous sub-stream if a new one appears instead of waiting for it to naturally complete and switching to the next one only after that.
+In contrary to `Amb()`, `Switch()` always switches to the most recent stream. It doesn't work with a collection of streams, it works on a stream of streams and always only listens to the latest sub-stream. It's a little bit like `Concat()` but it forcibly closes the previous sub-stream if a new one appears instead of waiting for it to naturally complete and switching to the next one only after that.
 
 To demonstrate this I will do the following:
 * Create a base stream that will provide powers of 10 (10, 100, 1000, etc.) every 5 seconds
@@ -1913,7 +1913,7 @@ The `Window()` operator will take the source stream and based on the various par
 
 As Window produces an `IObservable<IObservable<T>>`, you will have to have some kind of strategy to flatten this nested hierarchy of observables by using `Merge()`, `Concat()`, `Switch()` or something custom.
 
-The `Buffer()` operator is very similar to the `Window()` but it won't make the individual windows available as observable streams, instead it waits for them to close and returns their content as a collection, so you will get an `IObservable<IEnumerable<T>>`. You would probably do some kind of mathematical operation on this collection of events to summarize that window.
+The `Buffer()` operator is very similar to the `Window()` but it won't make the individual windows available as observable streams, instead it waits for them to close and returns their content as a collection, so you will get an `IObservable<IEnumerable<T>>`.
 
 As long as you are using these operators with their basic overloads and cover predictable windows over the original data source, I think it can be very useful especially for analytical/statistical purposes. Though an important note to mention is that there is no metadata (like a reference to the opening event for example) stored with either the sub-streams in case of the `Window()` or the collections in case of the `Buffer()` that would identify that particular window. So if you go crazy with opening and closing overlapping windows, well, good luck figuring out which window belongs to which pair of events.
 
@@ -1921,7 +1921,7 @@ As long as you are using these operators with their basic overloads and cover pr
 
 These operators let you go through each event of a stream, holding some accumulator object and letting you modify it for each event.
 
-For example for a numerical stream you can choose to collect all elements into a list. In this case a list is the accumulator and you just add the new numbers to it as they appear in the stream. Or you can do something more useful and do min or max selection (though you have explicit operators for that), or add up all the numbers.
+For example for a numerical stream you can choose to collect all elements into a list. In this case a list is the accumulator and you just add the new numbers to it as they appear in the stream. Or you can do something more useful and do min or max selection, or sum all the numbers (though you have explicit operators for all of that).
 
 The difference between the `Scan()` and `Aggregate()` operators is similar to the difference between the `Window()` and `Buffer()` in a way that `Scan()` is kind of a real time operator that emits all the subsequent results of the aggregation as new events appear in the source stream, while the `Aggregate()` will only emit the final result of the aggregation right after the original stream completes.
 
@@ -1982,7 +1982,7 @@ var source = Observable
 
 Schedulers are a core part of Rx. When you are building complicated pipelines, in special cases you might want greater control over the execution of parts of the pipeline. By default Rx is single threaded and it won't start spawning threads for you, though it's very much likely that the actual asynchronous code you wrap and use as part of your pipeline will execute its logic on background thread(s).
 
-If you have a piece of code that is resource intensive and you want to parallelise it, you can explicitly specify this need using a scheduler. Or if it's the opposite way and you want that piece of code to be executed on the same thread and/or immediately, again, schedulers are going to be your good friends. Or another great example for being explicit about the execution policy of your code is when you have to manipulate the UI and you have to marshall the execution to the UI thread.
+If you have a piece of code that is resource intensive and you want to parallelise it, you can explicitly specify this need using a scheduler. Or if it's the opposite way and you want that piece of code to be executed on the same thread (queued or immediately), again, schedulers are going to be your good friends. Or another great example for being explicit about the execution policy of your code is when you have to manipulate the UI and you have to marshall the execution to the UI thread.
 
 Schedulers are not just about threading though. In Rx you could see many examples for timing. Schedulers give the whole Rx system the sense of time. Every single Rx operator depends on its scheduler's clock and not on the system provided static `DateTime.Now`. Thanks to this you can be in explicit control of the time which can come handy when you are writing tests for your pipeline, you can speed things up and make a pipeline with lots of timings unit testable.
 
@@ -2013,7 +2013,7 @@ With the `Now` property you can get some insight on the scheduler's notion of cu
 
 ### Types of schedulers
 
-You will likely never have to actually implement a scheduler, but you should just use the ones provided by the library.
+You will likely never have to actually implement a scheduler, but you should be aware the ones provided by the library.
 
 #### ImmediateScheduler
 
@@ -2051,7 +2051,7 @@ It's great that you have Rx in your disposal to handle all kinds of asynchronous
 
 There is a special type of scheduler, the `HistoricalScheduler` that basically gives you the ability to speed up time, so that all the timed events will happen immediately.
 
-You can either use the absolutely manual way of adjusting the scheduler's clock by using the `AdvanceBy()` or `AdvanceTo()` methods to advance the clock by a relative amount of time or advance it to an absolute time, or you can just call the `Start()` method to run the scheduler until it has any scheduled elements.
+You can either use the absolutely manual way of adjusting the scheduler's clock by using the `AdvanceBy()` or `AdvanceTo()` methods to advance the clock by a relative amount of time or advance it to an absolute time, or you can just call the `Start()` method to run the scheduler while it has any scheduled elements.
 
 To demonstrate this here is an example to test a piece of pipeline that would normally take a minute to run, but in a unit test it will finish in the fraction of a second.
 
