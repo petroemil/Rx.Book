@@ -36,7 +36,7 @@ Let's get started.
 
 If you are developing modern applications (whether it's a mobile, desktop or server side application), at some point you will reach the limitations of synchronously running code and find yourself facing the difficulties of asynchronous and/or event-driven development. If you want to build a performant and responsive application and handle I/O operations, web service calls or CPU intensive tasks asynchronously, your code will become much more difficult to handle. Unusual methods must be used for coordination, exception handling and you might have to deal with cancellability of long -and the synchronization of parallel running operations.
 
-Reactive Extensions (hereinafter referred to as Rx) is a class library that allows us to build asynchronous and/or event-driven applications by representing the asynchronous data as "Observable" streams that we can use LINQ operations on and the execution, handling of race conditions, synchronization, marshalling of threads and more are handled by so called "Schedulers".
+Reactive Extensions (hereinafter referred to as Rx) is a class library that allows you to build asynchronous and/or event-driven applications by representing the asynchronous data as "Observable" streams that you can use LINQ operations on and the execution, handling of race conditions, synchronization, marshalling of threads and more are handled by so called "Schedulers".
 
 In short: Rx = Observables + LINQ + Schedulers
 
@@ -48,7 +48,7 @@ Depending on what kind of application you are building, there is a good chance t
 
 In contrast with that, asynchrony means you want to do things in response to events you don't necessarily know when they happen.
 
-A good example for this is the `Click` event of a button on the UI, but also the response from a web service call. In the case of the latter it's very much possible that in terms of the execution order of the commands you know exactly that you only want to do things after you have the response, but you have to consider the chance that this service call could take seconds to return, and if it would be written in a synchronous way, the execution on the caller thread would be blocked and it couldn't do anything until the service call returns. And this can lead to very unpleasant experience for the users as they will just see the UI becoming unresponsive or "frozen". To make sure it doesn't happen you will have to do asynchronous call which means that the logic will be executed (or waited in the case of I/O operations) in the background without blocking the calling thread and you will get the result through some kind of callback mechanism. If you have been around in the developer industry for a while, you might remember the dark days of callback chains, but fortunately in C# 5.0 / .NET 4.5 (in 2012) Microsoft introduced the `async` and `await` keywords that makes it possible to write asynchronous code that looks like just a regular synchronous code. Just think about the difficulties of implementing simple language constructs like a conditional operation, a loop or a try-catch block with the traditional form (callbacks) of asynchronous programming. With these new keywords you can naturally use all of these while still having a performant, responsive and scalable asynchronous code. But even though it makes life significantly easier in many scenarios, the moment we want to do something a little more complicated, like a retry, timeout or adding paging functionality to a web service call, we have to start writing complex logic because hiding the difficulties of dealing with callbacks won't save us from implementing these custom operations.
+A good example for this is the `Click` event of a button on the UI, but also the response from a web service call. In the case of the latter it's very much possible that in terms of the execution order of the commands you know exactly that you only want to do things after you have the response, but you have to consider the chance that this service call could take seconds to return, and if it would be written in a synchronous way, the execution on the caller thread would be blocked and it couldn't do anything until the service call returns. And this can lead to very unpleasant experience for the users as they will just see the UI becoming unresponsive or "frozen". To make sure it doesn't happen you will have to do asynchronous call which means that the logic will be executed (or waited in the case of I/O operations) in the background without blocking the calling thread and you will get the result through some kind of callback mechanism. If you have been around in the developer industry for a while, you might remember the dark days of callback chains, but fortunately in C# 5.0 / .NET 4.5 (in 2012) Microsoft introduced the `async` and `await` keywords that makes it possible to write asynchronous code that looks just like a regular synchronous code. Just think about the difficulties of implementing simple language constructs like a conditional operation, a loop or a try-catch block with the traditional form (callbacks) of asynchronous programming. With these new keywords you can naturally use all of these while still having a performant, responsive and scalable asynchronous code. But even though it makes life significantly easier in many scenarios, the moment you want to do something a little more complicated, like a retry, timeout or adding paging functionality to a web service call, you have to start writing complex logic because hiding the difficulties of dealing with callbacks won't save you from implementing these custom operations.
 
 Events (in C#) have a serious problem though, they are not objects, you can't pass them around as method parameters, and tracking the subscribers of an event is also not trivial. This is where the Observer design patter comes in handy, because it pretty much re-implements events, but this time your event source and the subscribers will be objects and the subscription will be an explicit operation.
 
@@ -56,7 +56,7 @@ The Observer design pattern consists of two simple interfaces.
 
 One of them is the `IObservable<T>` which represents an "observable" data source. This interface only has a `Subscribe()` method which kind of translates to the `+=` operator of the "event world".
 
-The other one is the `IObserver<T>` which represents an "observer" object that we can pass to the `IObservable<T>`'s `Subscribe()` method. In the original design pattern this interface has only a `Notify()` method that gets called by the event source when an event occurs.
+The other one is the `IObserver<T>` which represents an "observer" object that you can pass to the `IObservable<T>`'s `Subscribe()` method. In the original design pattern this interface has only a `Notify()` method that gets called by the event source when an event occurs.
 
 In the case of Rx, the implementation is slightly different. The `IObserver<T>` interface defines three methods: `OnNext()`, `OnError()` and `OnCompleted()`. `OnNext()` gets called for each new event from the event source, `OnError()` if something bad happened and `OnCompleted()` if the source wants to signal that it will not produce any more events and the subscription can be disposed.
 
@@ -64,7 +64,7 @@ Rx is built on top of these two interfaces, and using this simple design pattern
 
 ## What is LINQ?
 
-LINQ (Language Integrated Query) is making dev's life easier since .NET 3.5 (2007) when it comes to dealing with processing collections. This technology, or more like the language features that have been introduced with it, brought the first seeds of functional programming to C#. I won't go into details about what functional programming means because it's way out of the scope of this book, but I would like to quote Luca Bolognese's analogy from a PDC presentation from 2008.
+LINQ (Language Integrated Query) is making devs' life easier since .NET 3.5 (2007) when it comes to dealing with processing collections. This technology, or more like the language features that have been introduced with it, brought the first seeds of functional programming to C#. I won't go into details about what functional programming means because it's way out of the scope of this book, but I would like to quote Luca Bolognese's analogy from a PDC presentation from 2008.
 
 >It's like going to a bar and telling the guy behind the counter <br/>
 > \- I want a cappuccino <br/>
@@ -73,12 +73,9 @@ LINQ (Language Integrated Query) is making dev's life easier since .NET 3.5 (200
 
 To bring a bit better example, think about how you would solve the following problem: Given a range of numbers, get the even numbers and sum their squares.
 
-The very first solution would probably look something like the Code Sample 1-1.
+The very first solution would probably look something like this:
 
 ```csharp
-// Code Sample 1-1
-// Sum of the square of the even numbers - naive approach
-
 List<int> numbers = new List<int>();
 numbers.Add(1);
 numbers.Add(2);
@@ -103,27 +100,21 @@ foreach (var number in numbers)
 return accumulator;
 ```
 
-What could you do to make this code look prettier? How could you compress it a little bit, make it less verbose? Let's start with the initialization of the list (Code Sample 1-2).
+What could you do to make this code look prettier? How could you compress it a little bit, make it less verbose? Let's start with the initialization of the list.
 
 ```csharp
-// Code Sample 1-2
-// Collection initializer
-
 var numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 ```
 
 Let's go through this piece of code from keyword to keyword.
 
-It starts with a `var` keyword. When you declare (and also initialize in the same time) a variable, the compiler can infer the type of the variable based on the right side of the equals sign. In this example if you would move the mouse cursor over the `var` keyword, it would show that the numbers variable has the type of `List<int>`. This is a handy little feature of the language that makes the code a bit more compact and readable, but you will see examples for situations where it has a deeper role to enable certain functionality.
+It starts with a `var` keyword. When you declare (and also initialize in the same time) a variable, the compiler can infer the type of the variable based on the right side of the equals sign. In this example if you would move the mouse cursor over the `var` keyword, it would show that the `numbers` variable has the type of `List<int>`. This is a handy little feature of the language that makes the code a bit more compact and readable, but you will see examples for situations where it has a deeper role to enable certain functionality.
 
-Let's move on and take a look at the initialization of the list. The line doesn't end with calling the parameter less constructor, but the items of the list are defined within curly braces. This is called the object (or in this case collection) initializer syntax. With this you can initialize the properties of an object or the elements of a collection with a more lightweight syntax.
+Let's move on and take a look at the initialization of the list. The line doesn't end with calling the parameterless constructor, but the items of the list are defined within curly braces. This is called the object (or in this case collection) initializer syntax. With this you can initialize the properties of an object or the elements of a collection with a more lightweight syntax.
 
-Even though it doesn't belong to this specific example, but if you would combine the `var` keyword and the object initializer syntax, you would arrive to the so called anonymous types. This is really useful when you want to store temporary information in the middle of your algorithm, in a nice and structured format, without explicitly creating the class(es) that represent that structure. You can see a simple example in Code Sample 1-3
+Even though it doesn't belong to this specific example, but if you would combine the `var` keyword and the object initializer syntax, you would arrive to the so called anonymous types. This is really useful when you want to store temporary information in the middle of your algorithm, in a nice and structured format, without explicitly creating the class(es) that represent that structure.
 
 ```csharp
-// Code Sample 1-3
-// Anonymous Type
-
 var person = new { Name = "Emil", Age = 27 };
 ```
 
@@ -132,43 +123,31 @@ Here the compiler can look at the right side of the equals sign, it won't be abl
 Let's get back to the original example, and take the refactoring of the code one step further.
 
 ```csharp
-// Code Sample 1-4
-// Sum of the square of the even numbers - LINQ approach
-
 return numbers
     .Where(num => num % 2 == 0)
     .Select(num => num * num)
     .Sum();
 ```
 
-If you remember, the numbers variable is a collection of integers. How can you call a method called `Where()` on it, when the `List<T>` type doesn't have such method? The answer for this question is extension methods. In the good old days when you wanted to add new functionality to a type, you inherited a new class from the original type and defined the new method on it. This approach has two main problems though. On one side it's possible that the type you want to extend is sealed, the other problem is that even if you can define your own "super type", you will have to use that throughout your application and convert back and forth between that and the original type on the edges of your library.
+If you remember, the `numbers` variable is a collection of integers. How can you call a method called `Where()` on it, when the `List<T>` type doesn't have such method? The answer for this question is extension methods. In the good old days when you wanted to add new functionality to a type, you inherited a new class from the original type and defined the new method on it. This approach has two main problems though. On one side it's possible that the type you want to extend is `sealed`, the other problem is that even if you can define your own "super type", you will have to use that throughout your application and convert back and forth between that and the original type on the edges of your library.
 
-You don't have to think something too complicated. Just think about a function that extends the `string` with some special kind of formatting. If you want to use this logic in multiple places, you either have to move it to a static helper class or define your `SuperString` class. The latter in this specific example is not actually possible because the string type is sealed. So you are left with the static class. But think about how it would look of you would have to use more of these operations after each other...
+You don't have to think something too complicated. Just think about a function that extends the `string` with some special kind of formatting. If you want to use this logic in multiple places, you either have to move it to a static helper class or derive your `SuperString` class. The latter in this specific example is not actually possible because the string type is `sealed`. So you are left with the static class. But think about how it would look if you would have to use more of these operations after each other...
 
 To solve these kinds of problems, Microsoft introduced the extension methods in C#, which makes it possible to extend any class (or even interface) using the following syntax:
 
 ```csharp
-// Code Sample 1-5
-// Extension Method signature
-
 public static string SpecialFormat(this string s, int spaces)
 ```
 
-You have to place these extension methods in a static class. The interesting part of this method signature is its very first parameter that has the `this` keyword in front of it. It means that you are extending the `string` class with this method. Whenever you have a `string` in your application, you can just call this method, the system will automatically hide this first parameter by implicitly passing the reference of the `string` there, and you only have to provide - in this example - the `int spaces` parameter. The Code Sample 1-6 shows an example for the usage of this method.
+You have to place these extension methods in a static class. The interesting part of this method signature is its very first parameter that has the `this` keyword in front of it. It means that you are extending the `string` class with this method. Whenever you have a `string` in your application, you can just call this method, the system will automatically hide this first parameter by implicitly passing the reference of the `string` there, and you only have to provide - in this example - the `int spaces` parameter. In action it will look something like this.
 
 ```csharp
-// Code Sample 1-6
-// Using an Extension Method
-
 "Hello World".SpecialFormat(42);
 ```
 
 The way LINQ uses these extension methods brings this to the next level. To stay at the original example, let's take a quick look at the `Where()` method's signature.
 
 ```csharp
-// Code Sample 1-7
-// Signature of LINQ's Where() Extension Method
-
 public static IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
 ```
 
@@ -179,9 +158,6 @@ The other typical feature of LINQ operators is that they leave the important par
 If you continue reading the sample code, you very quickly arrive to an interesting expression passed as a parameter to the Where (and later to the Select) method.
 
 ```csharp
-// Code Sample 1-8
-// Lambda Expression
-
 num => num % 2 == 0
 ```
 
@@ -190,9 +166,6 @@ This is called a lambda expression, or anonymous method. With this lightweight s
 The full syntax of a lambda expression looks like this:
 
 ```csharp
-// Code Sample 1-9
-// Lambda Expression in its "full glory"
-
 (param1, param2) =>
 {
     // ...
@@ -200,18 +173,15 @@ The full syntax of a lambda expression looks like this:
 };
 ```
 
-In front of the arrow operator (`=>`), between parentheses you get the parameters, and after the arrow, between curly braces you have the body of the expression.
-The reason you don't have to provide any type information for the parameters or the return type is because you are passing this expression as a delegate, so the compiler knows already all those information. 
-There are some shortcuts as well.
-If there's only one parameter, you can leave the parentheses, but if there's no parameter, you have to include an empty pair of parentheses.
-If the expression only contains one line of code, you also don't have to wrap it between curly braces and don't have to use the explicit return keyword.
-And of course don't forget about the case where you actually have the method that matches the delegate's signature, in which case you can provide only the name of the method, so you don't have to write something like `Method(x => F(x))`, it's enough to just write `Method(F)`.
+In front of the arrow operator (`=>`), between parentheses you get the parameters, and after the arrow, between curly braces you have the body of the expression.</br>
+The reason you don't have to provide any type information for the parameters or the return type is because you are passing this expression as a delegate, so the compiler knows already all those information. </br>
+There are some shortcuts as well.</br>
+If there's only one parameter, you can loose the parentheses, but if there's no parameter, you have to include an empty pair of parentheses.</br>
+If the expression only contains one line of code, you also don't have to wrap it between curly braces and don't have to use the explicit `return` keyword.</br>
+And of course don't forget about the case where you actually have the method that matches the delegate's signature, in which case you can provide only the name of the method, so you don't have to write something like `Method(x => F(x))`, it's enough to just write `Method(F)`.</br>
 And just as a "fun fact" I'd like to mention that parallelizing the aforementioned example would only require one more operator in the beginning of the expression.
 
 ```csharp
-// Code Sample 1-10
-// Parallel LINQ
-
 return numbers
     .AsParallel()
     .Where(num => num % 2 == 0)
@@ -221,14 +191,14 @@ return numbers
 
 Thanks to the `AsParallel()` operator the whole query operation will run in parallel. Just think about what you would do if this requirement would come up after only having the original implementation in place.
 
-LINQ is actually more than these language elements, there is actual language level support to write query expressions, but that's not really important from this book's point of view. What is important that LINQ is a smart combination of the aforementioned underlying language features, and a huge set of predefined extension methods for various types. One of those many types is the `IEnumerable<T>` class, but LINQ has very similar extension methods for other types of data sources, like relational databases (LINQ to SQL), XML (LINQ to XML), or in a way if we want to think about it that way events (LINQ to Events), which leads us to Rx.
+LINQ is actually more than these language elements, there is actual language level support to write query expressions, but that's not really important from this book's point of view. What is important that LINQ is a smart combination of the aforementioned underlying language features, and a huge set of predefined extension methods for various types. One of those many types is the `IEnumerable<T>` class, but LINQ has very similar extension methods for other types of data sources, like relational databases (LINQ to SQL), XML (LINQ to XML), or if you want to think about it that way, events (LINQ to Events), which leads to Rx.
 
 ## LINQ vs Rx
 
 | LINQ (to Objects) | Rx |
 | ---: | :--- |
 | Can work with collections and it works on enumerable types, which means that it builds on the enumerator design pattern which is represented by the `IEnumerable<T>` and the `IEnumerator<T>` interfaces | Works with observable types, which means it builds on the observer design pattern which is represented by the `IObservable<T>` and `IObserver<T>` interfaces |
-| Represents a *polling* technique, as internally we keep polling the `MoveNext()` method on the `IEnumerator` for new elements in the collection. We ask the system for the next element | Represents a *push* technique, as internally the `IObservable` object keeps a reference to the subscribed `IObserver` and calls its `OnNext()` callback method when some event occurs. The system notifies us if there is a new element available
+| Represents a *polling* technique, as internally it keeps polling the `MoveNext()` method on the `IEnumerator` for new elements in the collection. You ask the system for the next element | Represents a *push* technique, as internally the `IObservable` object keeps a reference to the subscribed `IObserver` and calls its `OnNext()` callback method when some event occurs. The system notifies you if there is a new element available
 | Takes a collection and allows you to transform, filter, order, group and do many more operations on it and returns the modified collection | Takes a source event stream and transforms, filters, orders, groups and does many more operations on it, and returns the modified event stream |
 | Is a collection of extension methods for the `IEnumerable<T>` interface | Is a collection of extension methods for the `IObservable<T>` interface |
 
@@ -1930,7 +1900,7 @@ This example shows two hot observables using the `Concat()` operator, and as you
 
 #### Zip and CombineLatest
 
-Until this point we were only discussing flattening operators that were combining multiple streams into one. But what if you want to do some kind of join?
+Until this point you have been reading about simple flattening operators that were combining multiple streams into one, but what if you want to do something more complicated, like a join?
 
 Doing traditional LINQ/SQL style join on streams might not be the best idea (though it's obviously not impossible to do). Instead you might be interested in "order based" joins like combining events with the same index from multiple streams (first element on one stream with the first element on the other stream, second with second, third with third, etc.), or always having an up-to-date combination of the latest elements on all streams.
 
@@ -2032,7 +2002,7 @@ The result will look something like this:
 
 #### Window and Buffer
 
-The `Window()` operator will take the source stream and based on the various parameterisation it will open windows over the original stream that we can subscribe to. It can be parameterised in a way to create windows of n elements, or windows of x seconds, or windows of x seconds with a maximum of n elements, but you can also take more control over the opening and closing of windows by providing other streams as "signal streams" to close the existing and open a new window or to have overlapping windows opened by some event and closed by a connecting event. Like opening windows by pressing A, B or C and closing them by pressing 1, 2 or 3 but A will be closed by 1, B by 2 and C by 3.
+The `Window()` operator will take the source stream and based on the various parameterisation it will open windows over the original stream that you can subscribe to. It can be parameterised in a way to create windows of n elements, or windows of x seconds, or windows of x seconds with a maximum of n elements, but you can also take more control over the opening and closing of windows by providing other streams as "signal streams" to close the existing and open a new window or to have overlapping windows opened by some event and closed by a connecting event. Like opening windows by pressing A, B or C and closing them by pressing 1, 2 or 3 but A will be closed by 1, B by 2 and C by 3.
 
 As Window produces an `IObservable<IObservable<T>>`, you will have to have some kind of strategy to flatten this nested hierarchy of observables by using `Merge()`, `Concat()`, `Switch()` or something custom.
 
@@ -2088,7 +2058,7 @@ And here I would like to stop and make you think. If you have a `GroupBy()` oper
 
 This operator is useful if you don't just do a simple grouping but you also apply some kind of logic to the inner streams (or groups or windows) and potentially merge them back only after that.
 
-For example we can "amplify" the previous example and say we want to have a "scan" (real time aggregation) of each group, but we also don't want to deal with this nested observable nonsense so we want all of these in a single stream, tagged by the key of the group.
+For example you can "amplify" the previous example and say you want to have a "scan" (real time aggregation) of each group, but you also don't want to deal with this nested observable nonsense so you want all of these in a single stream, tagged by the key of the group.
 
 ```csharp
 var source = Observable
