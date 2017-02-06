@@ -414,8 +414,8 @@ namespace RxSamples
         public void SkipLast()
         {
             var source = Observable
-                .Range(0, 5)
-                .SkipLast(3);
+                .Range(0, 4)
+                .SkipLast(2);
 
             this.Subscribe(source, "SkipLast");
         }
@@ -450,8 +450,8 @@ namespace RxSamples
         public void TakeLast()
         {
             var source = Observable
-                .Range(0, 5)
-                .TakeLast(3);
+                .Range(0, 3)
+                .TakeLast(2);
 
             this.Subscribe(source, "TakeLast");
         }
@@ -541,7 +541,8 @@ namespace RxSamples
         public void DefaultIfEmpty()
         {
             var source = Observable
-                .Empty<int>()
+                .Range(0, 5)
+                .Where(x => x > 10)
                 .DefaultIfEmpty(42);
 
             this.Subscribe(source, "DefaultIfEmpty");
