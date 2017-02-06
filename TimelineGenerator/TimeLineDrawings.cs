@@ -568,15 +568,23 @@ namespace TimelineGenerator
 
         public async Task DefaultIfEmpty()
         {
-            this.timelineDrawer.DrawTimeLine(0, 0, 100);
-            this.timelineDrawer.DrawTimeLine(1, 0, 200);
+            this.timelineDrawer.DrawTimeLine(0, 0, 500);
+            this.timelineDrawer.DrawTimeLine(1, 0, 500);
+            this.timelineDrawer.DrawTimeLine(2, 0, 600);
 
-            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 100, false);
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 200, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 300, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 400, "3");
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 500, false);
 
-            this.timelineDrawer.AddEventToTimeLine(1, 100, "42");
-            this.timelineDrawer.AddCompletitionEventToTimeLine(1, 200, false);
+            this.timelineDrawer.AddCompletitionEventToTimeLine(1, 500, false);
 
-            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 100, 1, 100);
+            this.timelineDrawer.AddEventToTimeLine(2, 500, "42");
+            this.timelineDrawer.AddCompletitionEventToTimeLine(2, 600, false);
+
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 500, 1, 500);
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(1, 500, 2, 500);
         }
 
         public async Task StartWith()
@@ -672,33 +680,25 @@ namespace TimelineGenerator
 
         public async Task OnErrorResumeNext()
         {
-            this.timelineDrawer.DrawTimeLine(0, 0, 500);
-            this.timelineDrawer.DrawTimeLine(1, 500, 1000);
-            this.timelineDrawer.DrawTimeLine(2, 0, 1000);
+            this.timelineDrawer.DrawTimeLine(0, 0, 300);
+            this.timelineDrawer.DrawTimeLine(1, 300, 500);
+            this.timelineDrawer.DrawTimeLine(2, 0, 500);
 
             this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
             this.timelineDrawer.AddEventToTimeLine(0, 200, "1");
-            this.timelineDrawer.AddEventToTimeLine(0, 300, "2");
-            this.timelineDrawer.AddEventToTimeLine(0, 400, "3");
-            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 500, true);
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 300, true);
 
-            this.timelineDrawer.AddEventToTimeLine(1, 500, "10");
-            this.timelineDrawer.AddEventToTimeLine(1, 600, "20");
-            this.timelineDrawer.AddEventToTimeLine(1, 700, "30");
-            this.timelineDrawer.AddEventToTimeLine(1, 800, "40");
-            this.timelineDrawer.AddEventToTimeLine(1, 900, "50");
+            this.timelineDrawer.AddEventToTimeLine(1, 300, "10");
+            this.timelineDrawer.AddEventToTimeLine(1, 400, "20");
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "30");
 
             this.timelineDrawer.AddEventToTimeLine(2, 100, "0");
             this.timelineDrawer.AddEventToTimeLine(2, 200, "1");
-            this.timelineDrawer.AddEventToTimeLine(2, 300, "2");
-            this.timelineDrawer.AddEventToTimeLine(2, 400, "3");
-            this.timelineDrawer.AddEventToTimeLine(2, 500, "10");
-            this.timelineDrawer.AddEventToTimeLine(2, 600, "20");
-            this.timelineDrawer.AddEventToTimeLine(2, 700, "30");
-            this.timelineDrawer.AddEventToTimeLine(2, 800, "40");
-            this.timelineDrawer.AddEventToTimeLine(2, 900, "50");
+            this.timelineDrawer.AddEventToTimeLine(2, 300, "10");
+            this.timelineDrawer.AddEventToTimeLine(2, 400, "20");
+            this.timelineDrawer.AddEventToTimeLine(2, 500, "30");
 
-            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 500, 1, 500);
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 300, 1, 300);
         }
 
         public async Task Concat()
@@ -1059,6 +1059,43 @@ namespace TimelineGenerator
             this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 300, 1, 300);
             this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 600, 1, 600);
             this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 900, 1, 900);
+        }
+
+        public async Task Materialize_OnNext()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 200);
+            this.timelineDrawer.DrawTimeLine(1, 0, 200);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "1");
+            this.timelineDrawer.AddEventToTimeLine(1, 100, "(1)");
+
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 100, 1, 100);
+        }
+
+        public async Task Materialize_OnCompleted()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 200);
+            this.timelineDrawer.DrawTimeLine(1, 0, 200);
+
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 100, false);
+
+            this.timelineDrawer.AddEventToTimeLine(1, 100, "(C)");
+            this.timelineDrawer.AddCompletitionEventToTimeLine(1, 200, false);
+
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 100, 1, 100);
+        }
+
+        public async Task Materialize_OnError()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 200);
+            this.timelineDrawer.DrawTimeLine(1, 0, 200);
+
+            this.timelineDrawer.AddCompletitionEventToTimeLine(0, 100, true);
+
+            this.timelineDrawer.AddEventToTimeLine(1, 100, "(E)");
+            this.timelineDrawer.AddCompletitionEventToTimeLine(1, 200, false);
+
+            this.timelineDrawer.ConnectEventsOnDifferentTimelines(0, 100, 1, 100);
         }
     }
 }
