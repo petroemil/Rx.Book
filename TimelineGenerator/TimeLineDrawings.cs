@@ -1041,6 +1041,26 @@ namespace TimelineGenerator
             this.timelineDrawer.AddEventToTimeLine(1, 900, "4");
         }
 
+        public async Task RefCount()
+        {
+            this.timelineDrawer.DrawTimeLine(0, 0, 600);
+            this.timelineDrawer.DrawTimeLine(1, 300, 600);
+            this.timelineDrawer.DrawTimeLine(2, 600, 1000);
+
+            this.timelineDrawer.AddEventToTimeLine(0, 100, "0");
+            this.timelineDrawer.AddEventToTimeLine(0, 200, "1");
+            this.timelineDrawer.AddEventToTimeLine(0, 300, "2");
+            this.timelineDrawer.AddEventToTimeLine(0, 400, "3");
+            this.timelineDrawer.AddEventToTimeLine(0, 500, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(1, 400, "3");
+            this.timelineDrawer.AddEventToTimeLine(1, 500, "4");
+
+            this.timelineDrawer.AddEventToTimeLine(2, 700, "0");
+            this.timelineDrawer.AddEventToTimeLine(2, 800, "1");
+            this.timelineDrawer.AddEventToTimeLine(2, 900, "2");
+        }
+
         public async Task Sample()
         {
             this.timelineDrawer.DrawTimeLine(0, 0, 1000);

@@ -1029,19 +1029,19 @@ It's worth mentioning that this example is the worst case scenario. If your even
 
 ### Hot and Cold observables
 
-Even though so far I didn't talk about it explicitly, you might have realised that one of the main characteristic of observables is that they are only getting activated when you subscribe to them (and this is something that you should pay attention to if/when you design a custom observable).
+Even though so far I didn't talk about it explicitly, you might have noticed that one of the main characteristic of observables is that they are only getting activated when you subscribe to them (and this is something that you should pay attention to if/when you design a custom observable).
 
-There are real-time data sources, like most (if not all) of the .NET events (`PointerMoved`, `Click`, `KeyDown`, etc.), data sources that you can observe, but can't really control when they emit new events, and they've likely been virtually active before you subscribed to them.
+There are real-time data sources, like .NET events (`PointerMoved`, `Click`, `KeyDown`, etc.), data sources that you can observe, but can't really control when they emit new events, and they've likely been virtually active before you subscribed to them. These are called *Hot Observables*, and I think the best analogy to these kind of observables is reading the value of a globally accessible field or property... at any given time if multiple "observers" try to read the value they will be pointed to the same reference, to the same source and they will see the same value.
 
-And there are data sources, like an asynchronous method call, that you can still treat as an Rx stream, but you know that the service call will be triggered by your subscription to the (`FromAsync()`) observable stream. You know that any kind of notification will only appear in the stream after you subscribed to it, because the subscription triggered the execution of the underlying logic that pushes notifications in the stream.
+And there are data sources, like an asynchronous method call, that you can still treat as an Rx stream, but you know that the service call will be triggered by your subscription to the (`FromAsync()`) observable stream. You know that any kind of notification will only appear in the stream after you subscribed to it, because the subscription triggered the execution of the underlying logic that pushes notifications in the stream. These are called *Cold Observables*, and a good analogy to them is when you retrieve a value through some kind of getter or generator logic, every "observer" will retrieve the value by executing that piece of logic that returns that value, so there is a good chance that they will see different values.
 
-The aforementioned real-time data sources are called *Hot Observables*, and the other group is called *Cold Observables*. You can easily switch them around by introducing some kind of caching for a hot observable, or "broadcasting" the events from the source of a cold observable to all of its subscribers.
+Based on your needs, you can easily switch between these behaviours and turn a Cold observable into a Hot observable, or the other way around by using the `Publish()` or the `Replay()` operators.
 
 #### Creating hot observables
 
-To turn a cold observable into a hot one, you will have to use the combination of the `Publish()` and the `Connect()` methods. The `Publish()` will prepare you an observable object that wraps your original observable stream and broadcasts its values to all the subscribers. And in this case instead of the `Subscribe()` call, calling the `Connect()` method will activate the stream and trigger the subscription chain in the wrapped observable, and with that the execution/activation of the underlying data source that will put events into the stream.
+To turn a Cold observable into a Hot one, you will have to use the combination of the `Publish()` and the `Connect()` methods. The `Publish()` will prepare you an observable object that wraps your original observable stream and broadcasts its values to all the subscribers. And in this case instead of the `Subscribe()` call, calling the `Connect()` method will activate the stream and trigger the subscription chain in the wrapped observable, and with that the execution/activation of the underlying data source that will put events into the stream.
 
-To demonstrate this let's create a simple cold observable using the `Interval()` operator. It will generate a new stream for each of its subscribers instead of sharing the same one. You can easily see it in action with the following little sample:
+To demonstrate this let's create a simple Cold observable using the `Interval()` operator. It will generate a new stream for each of its subscribers instead of sharing the same one. You can easily see it in action with the following little sample:
 
 ```csharp
 var source = Observable.Interval(TimeSpan.FromSeconds(1));
@@ -1060,7 +1060,7 @@ If you run this, you will see events popping up on your screen from the two subs
 
 ![](Marble%20Diagrams/ColdObservableSample.png)
 
-Now it's time to turn this cold observable into a hot one by using the combination of the `Publish()` and `Connect()` methods.
+Now it's time to turn this Cold observable into a Hot one by using the combination of the `Publish()` and `Connect()` methods.
 
 ```csharp
 var originalSource = Observable.Interval(TimeSpan.FromSeconds(1));
@@ -1077,7 +1077,7 @@ await Task.Delay(TimeSpan.FromSeconds(3));
 this.Subscribe(publishedSource, "Publish - #2");
 ```
 
-The code above shows you how to publish a stream and turn it into a hot observable. As you can see you are subscribing to the `publishedSource` and because you immediately call `Connect()` and subscribe with the 1st observable, it will immediately start producing new values. And you can also see that this is a hot observable because after waiting 3 seconds and subscribing the 2nd observable, it will only receive values that have been emitted from the source after the subscription, meaning it will never see the values the source produced before the subscription happened.
+The code above shows you how to publish a stream and turn it into a Hot observable. As you can see you are subscribing to the `publishedSource` and because you immediately call `Connect()` and subscribe with the 1st observable, it will immediately start producing new values. And you can also see that this is a Hot observable because after waiting 3 seconds and subscribing the 2nd observable, it will only receive values that have been emitted from the source after the subscription, meaning it will never see the values the source produced before the subscription happened.
 
 ![](Marble%20Diagrams/PublishSample1.png)
 
@@ -1104,9 +1104,9 @@ The marble diagram for this case looks something like this:
 
 #### Creating cold observables
 
-The logic behind "cooling down" an observable is similar to the logic discussed about hot observables, but obviously it will go the other way around. In this case you will have to use the combination of `Replay()` and `Connect()` methods. The `Replay()` method will wrap the original (hot) observable into a caching stream, but it will only start recording and emitting the values after the `Connect()` method has been called.
+The logic behind "cooling down" an observable is similar to the logic discussed about Hot observables, but obviously it will go the other way around. In this case you will have to use the combination of `Replay()` and `Connect()` methods. The `Replay()` method will wrap the original (Hot) observable into a caching stream, but it will only start recording and emitting the values after the `Connect()` method has been called.
 
-As a demonstration let's just create a hot observable and make 2 subscriptions to it to prove that it's hot.
+As a demonstration let's just create a Hot observable and make 2 subscriptions to it to prove that it's Hot.
 
 ```csharp
 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -1129,7 +1129,7 @@ After running this example, you can clearly see that you only receive events wit
 
 ![](Marble%20Diagrams/HotObservableSample.png)
 
-Now, just like in the previous example, let's try to "cool it down" by using the `Replay()` and `Connect()` methods. In the first example call the `Connect()` immediately, meaning this cold observable will start caching the events of the underlying hot observable immediately, and every time someone subscribes to this cold observable, they will receive the whole history of events since the activation of the stream.
+Now, just like in the previous example, let's try to "cool it down" by using the `Replay()` and `Connect()` methods. In the first example call the `Connect()` immediately, meaning this Cold observable will start caching the events of the underlying Hot observable immediately, and every time someone subscribes to this cold observable, they will receive the whole history of events since the activation of the stream.
 
 ```csharp
 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -1184,6 +1184,45 @@ this.Subscribe(replayedSource, "Replay - #2");
 Events will only get recorded (and emitted) after the activation of the cold observable.
 
 ![](Marble%20Diagrams/ReplaySample2.png)
+
+#### RefCount
+
+As you can see it's a little bit cumbersome to deal with these `IConnectableObservable`s, you have to manually call the `Connect()` when you want it to start doing its job, and normally you also have to keep track of the subscribers and make sure you dispose the underlying subscription if it's no longer needed.
+
+To deal with these complications, you can use the `RefCount()` operator that does all of these for you. It will wrap the `IConnectableObservable` and activate it after the first subscriber, keeps track of the number of subscribers, and when there are no more, it disposes the underlying observable.
+
+To demonstrate lets do the following.
+* Create a Cold observable
+* Make it Hot using the combination of `Publish()` and `RefCount()`
+* Make a subscription (#1), notice that it immediately gets activated, no need to call `Connect()` explicitly
+* Wait a couple of seconds
+* Make an other subscription (#2), to verify it's Hot
+* Dispose subscription #1 and #2, to demonstrate that it will dispose the underlying stream as well
+* Make a third subscription to show that it will activate a new subscription to the underlying stream
+
+```csharp
+var hotInterval = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Publish()
+    .RefCount();
+
+var subscription1 = this.Subscribe(hotInterval, "RefCount #1");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+var subscription2 = this.Subscribe(hotInterval, "RefCount #2");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+subscription1.Dispose();
+subscription2.Dispose();
+
+var subscription3 = this.Subscribe(hotInterval, "RefCount #3");
+```
+
+The timeline for this will look something like this:
+
+![](Marble%20Diagrams/RefCount.png)
 
 ### Subjects
 

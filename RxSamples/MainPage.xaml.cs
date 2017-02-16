@@ -38,9 +38,9 @@ namespace RxSamples
             Console.WriteLine("Hello Rx");
         }
 
-        private void Subscribe<T>(IObservable<T> source, string subscribtionName)
+        private IDisposable Subscribe<T>(IObservable<T> source, string subscribtionName)
         {
-            source
+            return source
                 .ObserveOnDispatcher()
                 .Subscribe(
                     next => Console.WriteLine($"[{subscribtionName}] [OnNext]: {next}"),
@@ -307,6 +307,27 @@ namespace RxSamples
 
             Console.WriteLine($"Subscribing with #2 observer at {DateTime.Now}");
             this.Subscribe(replayedSource, "Replay - #2");
+        }
+
+        public async void RefCount()
+        {
+            var hotInterval = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Publish()
+                .RefCount();
+
+            var subscription1 = this.Subscribe(hotInterval, "RefCount #1");
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            var subscription2 = this.Subscribe(hotInterval, "RefCount #2");
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            subscription1.Dispose();
+            subscription2.Dispose();
+
+            var subscription3 = this.Subscribe(hotInterval, "RefCount #3");
         }
 
         public async void Subject_TurnsAnythingToHot()
