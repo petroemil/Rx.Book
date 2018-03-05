@@ -1,4 +1,4 @@
-# Table of contents
+ # Table of contents
 
 + **Introduction**
   + [The problem - asynchrony](#the-problem---asynchrony)
@@ -14,7 +14,7 @@
   + [Preparation](#preparations-1)
   + [Observable streams](#observable-streams)
   + [LINQ](#linq)
-  + [Schedulers](#shedulers)
+  + [Schedulers](#schedulers) 
   + [Rx + Async](#rx--async)
   + [Summary](#summary-1)
 
