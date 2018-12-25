@@ -13,6 +13,7 @@
 + **Rx = Observables + LINQ + Schedulers**
   + [Preparation](#preparations-1)
   + [Observable streams](#observable-streams)
+  + [Subscription lifecycle](#subscription-lifecycle)
   + [LINQ](#linq)
   + [Schedulers](#schedulers) 
   + [Rx + Async](#rx--async)
@@ -1185,45 +1186,6 @@ Events will only get recorded (and emitted) after the activation of the cold obs
 
 ![](Marble%20Diagrams/ReplaySample2.png)
 
-#### RefCount
-
-As you can see it's a little bit cumbersome to deal with these `IConnectableObservable`s, you have to manually call the `Connect()` when you want it to start doing its job, and normally you also have to keep track of the subscribers and make sure you dispose the underlying subscription if it's no longer needed.
-
-To deal with these complications, you can use the `RefCount()` operator that does all of these for you. It will wrap the `IConnectableObservable` and activate it after the first subscriber, keeps track of the number of subscribers, and when there are no more, it disposes the underlying observable.
-
-To demonstrate lets do the following.
-* Create a Cold observable
-* Make it Hot using the combination of `Publish()` and `RefCount()`
-* Make a subscription (#1), notice that it immediately gets activated, no need to call `Connect()` explicitly
-* Wait a couple of seconds
-* Make an other subscription (#2), to verify it's Hot
-* Dispose subscription #1 and #2, to demonstrate that it will dispose the underlying stream as well
-* Make a third subscription to show that it will activate a new subscription to the underlying stream
-
-```csharp
-var hotInterval = Observable
-    .Interval(TimeSpan.FromSeconds(1))
-    .Publish()
-    .RefCount();
-
-var subscription1 = this.Subscribe(hotInterval, "RefCount #1");
-
-await Task.Delay(TimeSpan.FromSeconds(3));
-
-var subscription2 = this.Subscribe(hotInterval, "RefCount #2");
-
-await Task.Delay(TimeSpan.FromSeconds(3));
-
-subscription1.Dispose();
-subscription2.Dispose();
-
-var subscription3 = this.Subscribe(hotInterval, "RefCount #3");
-```
-
-The timeline for this will look something like this:
-
-![](Marble%20Diagrams/RefCount.png)
-
 ### Subjects
 
 Subjects are special kind of types that implements both the `IObservable` and `IObserver` interfaces. They will usually sit somewhere in the middle of the stream. Or you can use them as a source that you can use as an entry point to the stream, and you can manually call the `OnNext()`, `OnError()` and `OnCompleted()` methods on it. In some samples later you will see this kind of usage.
@@ -1313,6 +1275,201 @@ this.Subscribe(asyncSubject, "AsyncSubject #2");
 ```
 
 The `AsyncSubject` only yields anything after it's been terminated, meaning no matter when or where do you subscribe to it, you will always get the last event from the stream before its termination. In this example both the 1st and 2nd subscription will see the events "3" and "OnCompleted" right after `OnCompeted()` have been called on the subject.
+
+## Subscription lifecycle
+
+When you work on event driven applications, the one thing that always causes problems is handling the lifecycles of the various streams. When you don't just call methods that do things and then return and that's all, but subscribe to streams that will somehow run in the background and invoke your registered handler at some unknown point in time, things can get complicated, for example you can easily forget about unsubscribing from a stream when you no longer need it. The good news is that there are a bunch of really handy tools in the Rx library to make your life easier.
+
+### CompositeDisposable
+
+When you have many subscriptions in your class, like "Rx-ified" event handlers in a GUI application, you want to keep track of those and save their `IDisposable` handles. Once you close the window or navigate away from the page or hide the control you want to stop those subscriptions so they are not wasting resources in the background or causing memory leaks. You can define these `IDisposables` one by one or maybe create a `List<IDisposable>` to collect them and then when you no longer need them, one way or the other, enumerate and dispose them.
+
+The good news is, that even though it's not a very difficult problem to solve, you do get a little help from the library through the `CompositeDisposable`. The `CompositeDisposable` itself is an `IDisposable` and you can use it to collect many individual `IDisposables` so when the parent object gets disposed, all the children get disposed as well. Simple, but very useful.
+
+To demonstrate how it works, here is a simplified implementation of the `CompositeDisposable`.
+
+```csharp
+public class CompositeDisposableImplementation : IDisposable
+{
+    private readonly List<IDisposable> disposables = new List<IDisposable>();
+
+    public void Add(IDisposable disposable)
+    {
+        this.disposables.Add(disposable);
+    }
+
+    public void Dispose()
+    {
+        foreach (var disposable in this.disposables)
+        {
+            disposable.Dispose();
+        }
+    }
+}
+```
+
+### SerialDisposable
+
+The `SerialDisposable` can be used when you have a subscription that you keep overriding with newer subscriptions. Instead of having to dispose the old one and override it with the new, you can keep an instance of a `SerialDisposable` around and it will automatically dispose its currently held `IDisposable` when you try to override it with a new one or set it to null.
+
+```csharp
+public class SerialDisposableImplementation : IDisposable
+{
+    private IDisposable disposable;
+    public IDisposable Disposable
+    {
+        get => this.disposable;
+        set
+        {
+            this.disposable?.Dispose();
+            disposable = value;
+        }
+    }
+
+    public void Dispose()
+    {
+        this.disposable?.Dispose();
+    }
+}
+```
+
+### RefCount (IConnectableObservable<T>)
+
+`RefCount()` leads back to the topic of [Hot and Cold Observables](#hot-and-cold-observables), right after calling the `Replay()` or `Publish()` operators. When you use these operators you have to notice that they don't return a usual `IObservable`, but an `IConnectableObservable` instead. This interface contains one extra method, `Connect()` that returns an `IDisposable`.
+
+```csharp
+public interface IConnectableObservable<T> : IObservable<T>
+{
+    IDisposable Connect();
+}
+```
+
+So what happens is that when you want to turn a Cold observable into Hot with the `Publish()` operator, or a Hot Observable into a Cold with the `Replay()` operator, you will get an `IConnectableObservable` where you have to manually call the `Connect()` method (from which point of time every event will be "broadcasted" or "remembered") and store the returned `IDisposable` as that's the reference to your underlying subscription - if you want to kill all of this, you will have to dispose that as well and not just the usual `IDisposable` that you get from the `Subscribe()` method.
+
+You can see that there's a lot to pay attention to, call `Connect()`, store two `IDisposable` objects...
+
+When you use the `RefCount()` operator, all of this is being taken care of for you seamlessly. 
+
+When the first subscriber appears, the `RefCount()` operator will automatically call the `Connect()` method on the underlying `IConnectableObservable` and store the `IDisposable` returned from the call. 
+Once there are no subscribers left, the `RefCount()` operator will also automatically dispose the stored `IDdisposable`.
+
+To demonstrate lets do the following.
+* Create a Cold observable
+* Make it Hot using the combination of `Publish()` and `RefCount()`
+* Make a subscription (#1), notice that it immediately gets activated, no need to call `Connect()` explicitly
+* Wait a couple of seconds
+* Make an other subscription (#2), to verify it's Hot
+* Dispose subscription #1 and #2, to demonstrate that it will dispose the underlying stream as well
+* Make a third subscription to show that it will activate a new subscription to the underlying stream
+
+```csharp
+var hotInterval = Observable
+    .Interval(TimeSpan.FromSeconds(1))
+    .Publish()
+    .RefCount();
+
+var subscription1 = this.Subscribe(hotInterval, "RefCount #1");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+var subscription2 = this.Subscribe(hotInterval, "RefCount #2");
+
+await Task.Delay(TimeSpan.FromSeconds(3));
+
+subscription1.Dispose();
+subscription2.Dispose();
+
+var subscription3 = this.Subscribe(hotInterval, "RefCount #3");
+```
+
+The timeline for this will look something like this:
+
+![](Marble%20Diagrams/RefCount.png)
+
+### Switch (IObservable<IObservable<T>>)
+
+The `Switch()` operator can be used on a stream of streams and it will always only subscribe to the latest available (inner) stream. It will also make sure to unsubscribe from the previous stream to make sure it won't keep running in the background unobserved.
+
+With a little bit of help, it can be used with a `Subject` to seamlessly swap the underlying data source of a stream without having to notify the rest of the application to unsubscribe from the old stream and subscribe to the new one.
+
+Naive implementation:
+```csharp
+public class NaiveSource
+{
+    public IObservable<int> Observable { get; private set; }
+
+    private readonly Subject<Unit> sourceChanged = new Subject<Unit>();
+    public IObservable<Unit> SourceChanged => sourceChanged;
+
+    public void UpdateSource(IObservable<int> source)
+    {
+        // Swap the observable to the new source
+        Observable = source;
+
+        // Send out a notification that the source has changed
+        sourceChanged.OnNext(Unit.Default);
+    }
+}
+
+public class NaiveConsumer
+{
+    private readonly NaiveSource source;
+    private IDisposable subscription;
+
+    public NaiveConsumer(NaiveSource source)
+    {
+        this.source = source;
+
+        // Listen to the SourceChanged event
+        this.source.SourceChanged.Subscribe(_ => UpdateSubscription());
+
+        // Set up initial subscription
+        UpdateSubscription();
+    }
+
+    private void UpdateSubscription()
+    {
+        // Dispose the old subscription
+        this.subscription?.Dispose();
+
+        // Override it with the new one
+        this.subscription = this.source.Observable?.Subscribe(x => Console.WriteLine(x));
+    }
+}
+```
+
+Using a Subject and Switch:
+```csharp
+public class SwitchSource
+{
+    public IObservable<int> Observable { get; }
+
+    private readonly Subject<IObservable<int>> sources = new Subject<IObservable<int>>();
+
+    public SwitchSource()
+    {
+        // Observable only gets set once, the reference never changes
+        Observable = this.sources.Switch();
+    }
+
+    public void UpdateSource(IObservable<int> source)
+    {
+        // Pushing the new source to the underlying subject so the Switch() operator can pick it up and deal with subscription lifecycle management
+        this.sources.OnNext(source);
+    }
+}
+
+public class SwitchConsumer
+{
+    private readonly IDisposable subscription;
+
+    public SwitchConsumer(SwitchSource source)
+    {
+        // Only have to subscribe once, source changes are handled seamlessly
+        this.subscription = source.Observable.Subscribe(x => Console.WriteLine(x));
+    }
+}
+```
 
 ## LINQ
 
