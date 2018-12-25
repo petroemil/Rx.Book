@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
-using Windows.UI.Xaml.Controls;
+using System.Windows.Controls;
 
 namespace SearchExample.RxService
 {

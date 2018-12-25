@@ -1,8 +1,7 @@
-﻿using Windows.UI;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Shapes;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace TimelineGenerator
 {
@@ -68,7 +67,7 @@ namespace TimelineGenerator
                 timeLine.Stroke = new SolidColorBrush(Colors.LightGray);
                 timeLine.StrokeStartLineCap = PenLineCap.Round;
                 timeLine.StrokeEndLineCap = PenLineCap.Round;
-                timeLine.SetValue(Canvas.ZIndexProperty, 0.0);
+                timeLine.SetValue(Canvas.ZIndexProperty, 1);
                 timeLine.X1 = x1;
                 timeLine.Y1 = y;
                 timeLine.X2 = x2;
@@ -93,7 +92,7 @@ namespace TimelineGenerator
             timeLine.Stroke = new SolidColorBrush(Colors.LightGray);
             timeLine.StrokeStartLineCap = PenLineCap.Round;
             timeLine.StrokeEndLineCap = PenLineCap.Round;
-            timeLine.SetValue(Canvas.ZIndexProperty, 0.0);
+            timeLine.SetValue(Canvas.ZIndexProperty, 1);
             timeLine.X1 = x1;
             timeLine.Y1 = y;
             timeLine.X2 = x2;
@@ -117,7 +116,7 @@ namespace TimelineGenerator
             connector.Stroke = new SolidColorBrush(Colors.DarkGray);
             connector.StrokeStartLineCap = PenLineCap.Round;
             connector.StrokeEndLineCap = PenLineCap.Round;
-            connector.SetValue(Canvas.ZIndexProperty, 0.0);
+            connector.SetValue(Canvas.ZIndexProperty, 1);
             connector.X1 = x1;
             connector.Y1 = y1;
             connector.X2 = x2;
@@ -142,7 +141,7 @@ namespace TimelineGenerator
             ellipse.SetValue(Canvas.LeftProperty, x1);
             ellipse.SetValue(Canvas.TopProperty, y1);
             ellipse.Fill = new SolidColorBrush(isError ? Colors.DarkRed : Colors.DarkGreen);
-            ellipse.SetValue(Canvas.ZIndexProperty, 1.0);
+            ellipse.SetValue(Canvas.ZIndexProperty, 2);
 
             this.canvas.Children.Add(ellipse);
         }
@@ -162,7 +161,7 @@ namespace TimelineGenerator
             container.VerticalAlignment = VerticalAlignment.Top;
             container.SetValue(Canvas.LeftProperty, x1);
             container.SetValue(Canvas.TopProperty, y1);
-            container.SetValue(Canvas.ZIndexProperty, 1.0);
+            container.SetValue(Canvas.ZIndexProperty, 2);
 
             var ellipse = new Ellipse();
             ellipse.Width = this.eventSize;

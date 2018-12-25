@@ -5,13 +5,6 @@ using System.Linq;
 
 namespace LINQSamples
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-        }
-    }
-
     public class MyEnumerable : IEnumerable<object>
     {
         public IEnumerator<object> GetEnumerator()

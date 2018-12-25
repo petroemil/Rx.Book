@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Controls;
+using System.Windows.Controls;
 
 namespace TimelineGenerator
 {
@@ -31,7 +32,11 @@ namespace TimelineGenerator
                 this.timelineDrawer.ClearCanvas();
                 await (Task)method.Invoke(this, null);
                 this.timelineDrawer.SetCanvasSize();
-                await this.timelineRenderer.SaveBMP(method.Name);
+
+                // Wait a little bit to make sure the UI gets updated
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+                this.timelineRenderer.SavePNG(method.Name);
             }
         }
 

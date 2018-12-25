@@ -1,15 +1,14 @@
-﻿using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+﻿using System.Windows;
 
 namespace TimelineGenerator
 {
-    public sealed partial class MainPage : Page
+    public partial class MainWindow : Window
     {
         private readonly TimeLineDrawings timeLineDrawings;
 
-        public MainPage()
+        public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             this.timeLineDrawings = new TimeLineDrawings(this.Canvas, this.Border);
             this.Loaded += MainPage_Loaded;
         }
@@ -17,7 +16,7 @@ namespace TimelineGenerator
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             await this.timeLineDrawings.ExecuteMethods();
-            App.Current.Exit();
-        }        
+            Application.Current.Shutdown();
+        }
     }
 }

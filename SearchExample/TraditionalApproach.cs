@@ -1,9 +1,10 @@
 ﻿using SearchExample.TraditionalService;
 using System;
 using System.Collections.Generic;
-using Windows.System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace SearchExample
 {
@@ -65,10 +66,14 @@ namespace SearchExample
 
             // Subscribing to events to trigger service call
             this.searchButton.Click += (s, e) => resultsServiceHelper.ServiceCall(this.searchBox.Text);
-            this.suggestions.ItemClick += (s, e) => resultsServiceHelper.ServiceCall(e.ClickedItem as string);
+            this.suggestions.SelectionChanged += (s, e) =>
+            {
+                if (e.AddedItems.OfType<string>().SingleOrDefault() is string selectedSuggestion)
+                    resultsServiceHelper.ServiceCall(selectedSuggestion);
+            };
             this.searchBox.KeyDown += (s, e) =>
             {
-                if (e.Key == VirtualKey.Enter)
+                if (e.Key == Key.Enter)
                     resultsServiceHelper.ServiceCall(this.searchBox.Text);
             };
 

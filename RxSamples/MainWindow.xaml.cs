@@ -1,36 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
+using System.Reactive;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
+using System.Threading;
 
 namespace RxSamples
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainPage : Page
+    public partial class MainWindow : Window
     {
-        public MainPage()
+        private readonly SynchronizationContext synchronizationContext;
+
+        public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+            this.synchronizationContext = SynchronizationContext.Current;
             this.Loaded += OnLoaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            
+            // Call one of the sample methods from below and run the application
         }
 
         private void TextBlockUsageSample()
@@ -41,7 +38,7 @@ namespace RxSamples
         private IDisposable Subscribe<T>(IObservable<T> source, string subscribtionName)
         {
             return source
-                .ObserveOnDispatcher()
+                .ObserveOn(this.synchronizationContext)
                 .Subscribe(
                     next => Console.WriteLine($"[{subscribtionName}] [OnNext]: {next}"),
                     error => Console.WriteLine($"[{subscribtionName}] [OnError]: {error.Message}"),
@@ -163,7 +160,7 @@ namespace RxSamples
 
         private void FromEventPattern()
         {
-            var source = Observable.FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown));
+            var source = Observable.FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown));
 
             this.Subscribe(source, "FromEventPattern");
         }
@@ -393,7 +390,7 @@ namespace RxSamples
         public void Select()
         {
             var source = Observable
-                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown))
                 .Select(e => e.EventArgs.Key.ToString());
 
             this.Subscribe(source, "Select");
@@ -402,8 +399,8 @@ namespace RxSamples
         public void Where()
         {
             var source = Observable
-                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
-                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .FromEventPattern<MouseEventArgs>(this, nameof(this.MouseMove))
+                .Select(e => e.EventArgs.GetPosition(this))
                 .Select(p => new Point((int)(p.X / 100), (int)(p.Y / 100)))
                 .Where(p => p.X == p.Y)
                 .Select(p => $"{p.X}, {p.Y}");
@@ -414,8 +411,8 @@ namespace RxSamples
         public void DistinctUntilChanged()
         {
             var source = Observable
-                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
-                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .FromEventPattern<MouseEventArgs>(this, nameof(this.MouseMove))
+                .Select(e => e.EventArgs.GetPosition(this))
                 .Select(p => new Point((int)(p.X / 100), (int)(p.Y / 100)))
                 .DistinctUntilChanged()
                 .Select(p => $"{p.X}, {p.Y}");
@@ -608,7 +605,7 @@ namespace RxSamples
         public void Throttle()
         {
             var source = Observable
-                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown))
                 .Select(e => e.EventArgs.Key)
                 .Throttle(TimeSpan.FromSeconds(1));
 
@@ -618,8 +615,8 @@ namespace RxSamples
         public void Sample()
         {
             var source = Observable
-                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
-                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .FromEventPattern<MouseEventArgs>(this, nameof(this.MouseMove))
+                .Select(e => e.EventArgs.GetPosition(this))
                 .Sample(TimeSpan.FromMilliseconds(500));
 
             this.Subscribe(source, "Sample");
@@ -902,8 +899,8 @@ namespace RxSamples
         public async void AwaitExample2()
         {
             var result = await Observable
-                .FromEventPattern<PointerRoutedEventArgs>(this, nameof(this.PointerMoved))
-                .Select(e => e.EventArgs.GetCurrentPoint(this).Position)
+                .FromEventPattern<MouseEventArgs>(this, nameof(this.MouseMove))
+                .Select(e => e.EventArgs.GetPosition(this))
                 .Take(TimeSpan.FromSeconds(5))
                 .ToList();
         }
@@ -911,15 +908,15 @@ namespace RxSamples
         public async void AwaitExample3()
         {
             var enter = Observable
-                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown))
                 .Select(e => e.EventArgs.Key)
-                .Where(k => k == VirtualKey.Enter)
+                .Where(k => k == Key.Enter)
                 .FirstAsync();
 
             var esc = Observable
-                .FromEventPattern<KeyRoutedEventArgs>(this, nameof(this.KeyDown))
+                .FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown))
                 .Select(e => e.EventArgs.Key)
-                .Where(k => k == VirtualKey.Escape)
+                .Where(k => k == Key.Escape)
                 .FirstAsync();
 
             var dialogResult = await Observable.Amb(enter, esc);

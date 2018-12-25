@@ -1,14 +1,23 @@
 ﻿using SearchExample.RxService;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Reactive.Linq;
-using Windows.System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Threading;
 
 namespace SearchExample
 {
+    // A little helper extension until the Rx library get support for .NET Core 3.0 WPF
+    public static class RxDispatcherHelper
+    {
+        public static SynchronizationContext SynchronizationContext { get; set; }
+        public static IObservable<T> ObserveOnDispatcher<T>(this IObservable<T> source)
+            => source.ObserveOn(SynchronizationContext);
+    }
+
     public class RxApproach
     {
         private readonly TextBox searchBox;
@@ -28,6 +37,8 @@ namespace SearchExample
 
         public void Initialise()
         {
+            RxDispatcherHelper.SynchronizationContext = SynchronizationContext.Current;
+
             this.InitialiseSuggestions();
             this.InitialiseResults();
         }
@@ -56,12 +67,13 @@ namespace SearchExample
                 .Select(_ => this.searchBox.Text);
 
             var suggestionSelected = Observable
-                .FromEventPattern<ItemClickEventArgs>(this.suggestions, nameof(this.suggestions.ItemClick))
-                .Select(e => e.EventArgs.ClickedItem as string);
+                .FromEventPattern<SelectionChangedEventArgs>(this.suggestions, nameof(this.suggestions.SelectionChanged))
+                .Select(e => e.EventArgs.AddedItems.OfType<string>().SingleOrDefault())
+                .Where(s => s != null);
 
             var enterKeyPressed = Observable
-                .FromEventPattern<KeyRoutedEventArgs>(this.searchBox, nameof(this.searchBox.KeyDown))
-                .Where(e => e.EventArgs.Key == VirtualKey.Enter)
+                .FromEventPattern<KeyEventArgs>(this.searchBox, nameof(this.searchBox.KeyDown))
+                .Where(e => e.EventArgs.Key == Key.Enter)
                 .Select(_ => this.searchBox.Text);
             
             // Merge the source events into a single stream
