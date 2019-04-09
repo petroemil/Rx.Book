@@ -15,7 +15,8 @@
   + [Observable streams](#observable-streams)
   + [Subscription lifecycle](#subscription-lifecycle)
   + [LINQ](#linq)
-  + [Schedulers](#schedulers) 
+  + [Schedulers](#schedulers)
+  + [Testing](#testing)
   + [Rx + Async](#rx--async)
   + [Summary](#summary-1)
 
@@ -2233,90 +2234,178 @@ If you are building an UWP application, you can also use the WinRT `ThreadPool` 
 
 There's also a helper scheduler to schedule work on the available system `ThreadPool`, the `DefaultScheduler` which will choose between `System.Threading.ThreadPool` and `Windows.System.Threading.ThreadPool`.
 
+#### HistoricalScheduler
+
+The previous schedulers were all about threading but as I mentioned schedulers are also responsible to provide the notion of time to Rx operators.
+
+In most cases this time is the same as the real-world time, but considering everything depends on it, you can also tap into it and take control of it.
+
+This is where `HistoricalScheduler` comes to play.
+
+Your application might depend on timing, sampling, throttling to do its magic, but either for testing purposes or for experiments, you might want to deviate from the real-world time and run days or months worth of (historical) data through your system as quickly as possible while still triggering all the logic that depends on time (the timestamp of each message, the "current time", etc.).
+
+When you execute something in the world of Rx, it's handed to the underlying scheduler to schedule it. It might get executed immediately or might get scheduled sometime in the future. It's up to the scheduler to keep track of time and pick up shceduled actions as we reach them. Normally it means that the scheduler keeps a close eye on the clock (checking it every couple of milliseconds) and when it just passes a scheduled action, it picks it up and executes it.
+
+This logic can also be turned upside down and instead of waiting the time to pass, we can just jump to the next scheduled action, set our clock to that time, execute the action and look for the next one. This way we can speed up time significantly, get rid of all the waiting and reduce the run time to just the execution time of the actions.
+
+In case you have your historical data ready with their timestamps, you can fairly easily turn it into a stream that runs on a `HistoricalScheduler` and "thinks" those messages are arriving in real time.
+
+A very simplified example would look something like this:
+Have your data ready:
+
+```csharp
+var historicalEvents = new (DateTime Timestamp, string Data)[]
+{
+    (new DateTime(2020, 01, 01), "January"),
+    (new DateTime(2020, 02, 01), "February"),
+    (new DateTime(2020, 03, 01), "March")
+};
+```
+
+And then turn it into an Rx stream that "runs in the past":
+
+```csharp
+var historicalScheduler = new HistoricalScheduler(new DateTime(2020, 01, 01));
+
+var events = historicalEvents
+    .Select(x => Observable.Return(x.Data).Delay(x.Timestamp, historicalScheduler))
+    .Merge();
+```
+
+The trick here is that we pick up each message and schedule them to be delayed on their timestamp on the `HistoricalScheduler`. 
+It would work on any other scheduler as well, you would just have to wait 2 months for this test to finish.
+
+Last but not least... here comes the magic: all you have to do is subscribe to your stream to activate it and call `Start()` on the `HistoricalScheduler`.
+
+```csharp
+events
+    .Timestamp(historicalScheduler) // to log what Rx thinks the time is at the arrival of each event
+    .Do(x => Console.WriteLine(x)) // to actually see something in your console window
+    .Subscribe();
+
+historicalScheduler.Start();
+```
+
+In case you don't want to get through the whole thing as quickly as possible, but would rather like to make the process a little bit more interactive, you can also manually jump forward to certain points in time using the `AdvanceTo(DateTimeOffset)` and `AdvanceBy(TimeSpan)` methods on the `HistoricalScheduler`.
+
 ### Using schedulers
 
-Using schedulers can either be done by just simply passing an instance of it to the operator if it supports that kind of overload, or to make it more explicit without messing up the parameterisation of the operators, you can use the `ObserveOn()` or the `SubscribeOn()` extension methods explicitly.
+Using schedulers can either be done by passing an instance of it to the operator that supports it, or in certain cases, when it's about explicit thread marshalling, you can use the `ObserveOn()` or the `SubscribeOn()` extension methods explicitly.
 
 With the `SubscribeOn()` you can define where the *subscription* should happen, which would likely mean the execution of some asynchronous operation that you encapsulate with the `Observable.FromAsync()` operator or one of the other generator operators.
 
-On the other hand the `ObserveOn()` operator will define where the notifications (OnNext, OnCompleted, OnError) are executed going forward in the pipeline.
+On the other hand the `ObserveOn()` operator will define where the *notifications* (OnNext, OnCompleted, OnError) are executed going forward in the pipeline.
 
 It would be a good example to consider a client side application where you have some resource intensive operation that will yield some result but you want to display that result once you receive it. You would use the `SubscribeOn()` operator to make sure the execution will happen on a background thread, and the `ObserveOn()` (or more likely the `ObserveOnDispatcher()`) to marshall the result to the UI thread so you can display it.
 
-### Testing
+## Testing
 
-It's great that you have Rx in your disposal to handle all kinds of asynchronous and timed workflows and declaratively specify your threading strategy, but at some point you have to test what you built, to make sure it does what you think it should do. And I'm pretty sure you don't want to wait a minute in a unit test to figure out whether your timeout/retry logic works or not. Do you remember when I said Rx's notion of time relies on the scheduler it is using? This is another point where the concept of schedulers comes extremely handy.
+Now that you heard about the `HistrocialScheduler` it's easy to imagine that this kind of functionality comes very handy in case of unit testing. You might have logic to delay, throttle, sample, buffer events but you don't want a unit test to run for many seconds or days to trigger all cases.
 
-There is a special type of scheduler, the `HistoricalScheduler` that basically gives you the ability to speed up time, so that all the timed events will happen immediately.
+To easily do your typical `Assert(expected, actual)` kind of assertions, you can use the combination of `ReactiveTest` baseclass and the `TestScheduler`. To access these testing tools you have to reference the `Microsoft.Reactive.Testing` NuGet package.
 
-You can either use the absolutely manual way of adjusting the scheduler's clock by using the `AdvanceBy()` or `AdvanceTo()` methods to advance the clock by a relative amount of time or advance it to an absolute time, or you can just call the `Start()` method to run the scheduler while it has any scheduled elements.
+Start with the easy one: the `TestScheduler` is quite similar to the `HistoricalScheduler`.
+One big difference is that instead of using `DateTime` and `TimeSpan`, it works with ticks.
+Another bit of difference is that with the `TestScheduler` you can easily create a hot (`CreateHotObservable()`) or cold (`CreateColdObservable()`) observables with predefined events on the stream. These are obviously important behaviors to test, how your application behaves whether it misses important events if it subscribes too late to a hot observable or whether it properly gets up-to-date by subscribing to a cold observable.
 
-To demonstrate this here is an example to test a piece of pipeline that would normally take a minute to run, but in a unit test it will finish in the fraction of a second.
+The `ReactiveTest` static class gives a handful of helper methods to create messages with timestamp that you can feed to the `TestScheduler` and later to the `ReactiveAssert.AreElementsEqual()` statement.
 
-```csharp
-// Arrange
-var baseTime = DateTimeOffset.Now;
+But... enough of the talk, lets see some examples because a few lines of code says more than a thousand words.
 
-var scheduler = new HistoricalScheduler(baseTime);
+### Example 1 - Provide the input
 
-var expectedValues = new[]
-{
-    Timestamped.Create(0L, baseTime + TimeSpan.FromSeconds(10)),
-    Timestamped.Create(1L, baseTime + TimeSpan.FromSeconds(20)),
-    Timestamped.Create(4L, baseTime + TimeSpan.FromSeconds(30)),
-    Timestamped.Create(9L, baseTime + TimeSpan.FromSeconds(40)),
-    Timestamped.Create(16L, baseTime + TimeSpan.FromSeconds(50)),
-    Timestamped.Create(25L, baseTime + TimeSpan.FromSeconds(60))
-};
-
-var actualValues = new List<Timestamped<long>>();
-
-var source = Observable
-    .Interval(TimeSpan.FromSeconds(10), scheduler)
-    .Select(x => x * x)
-    .Take(6);
-
-var testSource = source
-    .Timestamp(scheduler)
-    .Do(x => actualValues.Add(x));
-
-// Act
-testSource.Subscribe();
-scheduler.Start();
-
-// Assert
-if (expectedValues.SequenceEqual(actualValues, TestDataEqualityComparer.Instance))
-    Console.WriteLine("The test was successful");
-else
-    Console.WriteLine("The test failed");
-```
-
-Plus the helper class to compare the expected and real values:
+In this example you will provide the specifically timed input, so you can run it through some logic and assert if the outcome is what you expected.
 
 ```csharp
-private class TestDataEqualityComparer : IEqualityComparer<Timestamped<long>>
+public void Test()
 {
-    // Singleton object
-    private TestDataEqualityComparer() { }
-    private static TestDataEqualityComparer instance;
-    public static TestDataEqualityComparer Instance => instance ?? (instance = new TestDataEqualityComparer());
+    var scheduler = new TestScheduler();
 
-    // Interface implementation
-    public int GetHashCode(Timestamped<long> obj) => 0;
-    public bool Equals(Timestamped<long> x, Timestamped<long> y)
-        => x.Value == y.Value && AreDateTimeOffsetsClose(x.Timestamp, y.Timestamp, TimeSpan.FromMilliseconds(10));
+    var source = scheduler.CreateHotObservable(
+        ReactiveTest.OnNext(100, 1),
+        ReactiveTest.OnNext(200, 2),
+        ReactiveTest.OnNext(300, 3),
+        ReactiveTest.OnNext(400, 4),
+        ReactiveTest.OnCompleted<int>(500)
+    );
 
-    // Helper method to compare DateTimes
-    private static bool AreDateTimeOffsetsClose(DateTimeOffset a, DateTimeOffset b, TimeSpan treshold)
-        => Math.Abs((a - b).Ticks) <= treshold.Ticks;
+    var actual = source.Where(x => x % 2 == 0);
+
+    var expected = new[]
+    {
+        ReactiveTest.OnNext(200, 2),
+        ReactiveTest.OnNext(400, 4),
+        ReactiveTest.OnCompleted<int>(500)
+    };
+
+    ReactiveAssert.AreElementsEqual(actual, scheduler.Start(() => expected).Messages);
 }
 ```
 
-This code requires some quick remarks.
+To produce the pre-defined stream (with timing and data), you'll have to use the `CreateHotObservable()` or `CreateColdObservable()` methods on the `TestScheduler` and pass in the messages. The messages will have to have the type of `Recorded<Notification<T>>`. 
+ - `T` stands for the type of your actual data
+ - `Notification<T>` should be familiar, it's a serialised form of what's happening on the stream. You can think of it as a discriminated union that covers all possuble event types on an Rx stream: `OnNext(T value)`, `OnError(Exception error)`, `OnCompleted()`
+ - `Recorded<T>` is part of the testing package and it adds a `Time` stamp to the message as a `long` (ticks)
 
-As you could notice, all the schedulers are singletons, and so should your `TestScheduler` or `HistoricalScheduler` be. Always share the same instance of the scheduler between each operator in your pipeline. In a real-world scenario you would just use some dependency-injected `IScheduler` objects in your logic, and in production you would set real schedulers for those, and in test you would set a `TestScheduler` or `HistoricalScheduler`.
+Fortunately the `ReactiveTest` static class gives a handful of helper methods to produce this complex type.
+ - `OnNext(long ticks, T value)`
+ - `OnError(long ticks, Exception exception)`
+ - `OnCompleted(long ticks)`
 
-When it makes sense (it's not always the case) you should do assertions on events by specifying their expected value and time of occurrence in the stream. To achieve this it's worth saving the date and time at the beginning of the test (and set this as the initial state of the test scheduler's clock) and use the `TimeStamp()` operator to tag each event with its "birth date" (according to the scheduler of course) and make the assertion on these `TimeStamped<T>` objects. When you make assertion on time stamps, you should make "close to" assertions instead of equality checks, because those dates will never be exactly the same. It worth mentioning that this example is a very naive (or verbose) approach to do the setup and the assertion, you could write some generic helper methods to help you with the "boilerplate" so your test code can be more compact and can focus on the important things.
+### Example 2 - Observe a generated stream
+
+In this example the stream is generated and all you want to do is to observe it and assert if the generated stream is what you expected.
+
+```csharp
+public void Test()
+{
+    var scheduler = new TestScheduler();
+
+    var observer = scheduler.CreateObserver<long>();
+
+    var source = Observable
+        .Interval(TimeSpan.FromSeconds(10), scheduler)
+        .Take(6)
+        .Subscribe(observer);
+
+    scheduler.Start();
+
+    var expected = new[]
+    {
+        ReactiveTest.OnNext(TimeSpan.FromSeconds(10).Ticks, 0l),
+        ReactiveTest.OnNext(TimeSpan.FromSeconds(20).Ticks, 1l),
+        ReactiveTest.OnNext(TimeSpan.FromSeconds(30).Ticks, 2l),
+        ReactiveTest.OnNext(TimeSpan.FromSeconds(40).Ticks, 3l),
+        ReactiveTest.OnNext(TimeSpan.FromSeconds(50).Ticks, 4l),
+        ReactiveTest.OnNext(TimeSpan.FromSeconds(60).Ticks, 5l),
+        ReactiveTest.OnCompleted<long>(TimeSpan.FromSeconds(60).Ticks)
+    };
+
+    ReactiveAssert.AreElementsEqual(expected, observer.Messages);
+}
+```
+
+In this case you had to set up a `TestableObserver` that captures and tags everything that it observes so you can compare it with an expected outcome. 
+It's important to see that for this test to pass quickly we had to pass the `TestScheduler` to the `Interval()` operator and once the setup was ready, we also had to call `Start()` explicitly on the scheduler.
+
+### Example 3 - Testing logic where timing isn't important
+
+All these tools that you could see in the previous two examples are designed to help you precisely test behaviors where timing is important, but there are cases where that bit doesn't really matter, all you want to test is some sort of filtering, count based buffering, grouping, aggregation, etc. For these cases you don't want to go through all the hassle of coming up with the expected outcome with specific time stamps, you just want to assert the values, not the timing.
+
+```csharp
+public void Test()
+{
+    var input = new[] { 0, 1, 2, 3, 4 }.ToObservable();
+
+    var actual = input.Where(x => x % 2 == 0);
+
+    var expected = new[] { 0, 2, 4 }.ToObservable();
+
+    ReactiveAssert.AreElementsEqual(expected, actual);
+}
+```
+
+As you can see it's much simpler and cleaner, no need to involve all the complexity of using `TestScheduler` and `ReactiveTest` when it's not necessary.
 
 ## Rx + Async
 
